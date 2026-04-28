@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="作品集 · 暗黑书架 — 视觉作品与文档收藏的个性化展示空间">
+    <meta property="og:title" content="作品集 · 暗黑书架">
+    <meta property="og:description" content="视觉作品与文档收藏的个性化展示空间">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <title>作品集 · 暗黑书架</title>
+    <style>
+        :root {
+            --bg: #F5F5F7;
+            --bg-soft: #FAFAFA;
+            --surface: #FFFFFF;
+            --surface-hover: #F0F0F2;
+            --card: #FFFFFF;
+            --card-hover: #FAFAFA;
+            --text: #1D1D1F;
+            --text-bright: #1D1D1F;
+            --text-secondary: #86868B;
+            --text-muted: #AEAEB2;
+            --accent: #0071E3;
+            --accent-glow: rgba(0, 113, 227, 0.18);
+            --accent-hover: #0077ED;
+            --accent-soft: rgba(0, 113, 227, 0.08);
+            --danger: #FF3B30;
+            --danger-hover: #FF453A;
+            --border: #E5E5EA;
+            --border-light: #E5E5EA;
+            --shelf-wood: #C4B5A0;
+            --shelf-wood-dark: #B0A290;
+            --shelf-bg: #F2EFEB;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.07);
+            --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.10);
+            --radius-sm: 8px;
+            --radius: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+            --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --transition-fast: 0.18s var(--ease-out);
+            --transition: 0.28s var(--ease-out);
+            --transition-slow: 0.45s var(--ease-out);
+            --font-serif: 'Georgia', 'Noto Serif SC', 'STSong', 'Songti SC', 'SimSun', serif;
+            --font-sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
+        :focus:not(:focus-visible) { outline:none; }
+        button:focus-visible, .masonry-card:focus-visible, .book-card:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:var(--radius-sm); }
+        [tabindex="0"]:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+        html { scroll-behavior: smooth; overflow-y: scroll; }
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            background-image:
+                radial-gradient(ellipse at 20% 10%, rgba(0,113,227,0.025) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(0,113,227,0.015) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+        /* 管理模式呼吸边框 */
+        body.admin-mode::before {
+            content:''; position:fixed; inset:8px; z-index:10000; pointer-events:none;
+            border:2px solid rgba(0,113,227,0.2); border-radius:16px;
+            animation:admin-breath 2.5s var(--ease-in-out) infinite;
+        }
+        @keyframes admin-breath {
+            0%,100%{border-color:rgba(0,113,227,0.15);box-shadow:inset 0 0 40px rgba(0,113,227,0.02);}
+            50%{border-color:rgba(0,113,227,0.35);box-shadow:inset 0 0 60px rgba(0,113,227,0.06);}
+        }
+
+        /* ========== 导航栏 ========== */
+        .navbar {
+            position: sticky; top:0; z-index:100;
+            background: rgba(245,245,247,0.78);
+            backdrop-filter: blur(22px) saturate(1.3);
+            -webkit-backdrop-filter: blur(22px) saturate(1.3);
+            border-bottom: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            padding: 0 20px; display:flex; align-items:center;
+            height:58px; transition: background var(--transition);
+        }
+        .nav-tabs { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:24px; }
+        .nav-tab {
+            padding:9px 18px; border-radius:50px; border:none; background:transparent;
+            cursor:pointer; font-size:0.85rem; font-weight:500; color:var(--text-secondary);
+            transition: all var(--transition); font-family:var(--font-sans); white-space:nowrap;
+            letter-spacing:0.02em;
+        }
+        .nav-tab.active {
+            background:var(--accent); color:#fff; font-weight:600;
+            box-shadow:0 2px 12px var(--accent-glow);
+        }
+        .nav-tab:hover:not(.active) { color:var(--text); background:rgba(0,0,0,0.04); }
+        .nav-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; }
+        .btn {
+            display:inline-flex; align-items:center; gap:5px; padding:8px 16px;
+            border-radius:50px; font-size:0.82rem; font-weight:600; cursor:pointer;
+            border:none; transition:all var(--transition); white-space:nowrap;
+            letter-spacing:0.02em; font-family:var(--font-sans);
+        }
+        .btn-accent { background:var(--accent); color:#fff; box-shadow:0 2px 10px var(--accent-glow); }
+        .btn-accent:hover { background:var(--accent-hover); box-shadow:0 4px 20px var(--accent-glow); transform:translateY(-1px); }
+        .btn-accent:active { transform:scale(0.94) !important; }
+        .btn-ghost { background:transparent; color:var(--text-secondary); border:1.5px solid var(--border-light); }
+        .btn-ghost:hover { background:var(--surface-hover); border-color:var(--text-muted); color:var(--text-bright); transform:translateY(-1px); }
+        .btn-ghost:active { transform:scale(0.94) !important; }
+        .btn-sm { padding:5px 12px; font-size:0.75rem; border-radius:20px; }
+        .btn-icon { width:36px; height:36px; border-radius:50%; padding:0; display:flex; align-items:center; justify-content:center; font-size:1rem; }
+
+        /* ========== 主容器 ========== */
+        .main-container { max-width:1300px; margin:0 auto; padding:20px 18px 60px; animation:fadeSlideIn 0.45s var(--ease-out); }
+        @keyframes fadeSlideIn { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+
+        /* ========== 统计栏 ========== */
+        .stats-bar {
+            display:flex; gap:18px; flex-wrap:wrap; margin-bottom:18px;
+            color:var(--text-secondary); font-size:0.8rem; align-items:center;
+            padding:10px 16px; background:var(--surface); border-radius:30px;
+            box-shadow:var(--shadow-sm);
+        }
+        .stats-bar .stat { display:flex; align-items:center; gap:4px; }
+        .stats-bar .stat strong { color:var(--text-bright); }
+        .stats-sep { width:1px; height:14px; background:var(--border-light); border-radius:1px; }
+
+        /* ========== 筛选按钮 ========== */
+        .filter-bar { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+        .btn-filter {
+            padding:10px 24px; border-radius:50px; font-size:0.92rem; font-weight:600;
+            cursor:pointer; border:none; transition:all var(--transition); white-space:nowrap;
+            letter-spacing:0.02em; font-family:var(--font-sans);
+            background:transparent; color:var(--text-secondary); border:1.5px solid var(--border-light);
+        }
+        .btn-filter.active { background:var(--accent); color:#fff; box-shadow:0 2px 10px var(--accent-glow); border-color:var(--accent); }
+        .btn-filter:hover:not(.active) { background:var(--surface-hover); border-color:var(--text-muted); color:var(--text-bright); }
+
+        /* ========== 空状态 ========== */
+        .empty-state { text-align:center; padding:70px 20px; color:var(--text-secondary); animation:fadeSlideIn 0.5s var(--ease-out); }
+        .empty-state .empty-icon { font-size:4.5rem; margin-bottom:14px; opacity:0.45; animation:float 3s var(--ease-in-out) infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+        .empty-state h3 { font-family:var(--font-serif); font-size:1.3rem; margin-bottom:6px; color:var(--text-bright); }
+        .empty-state p { font-size:0.85rem; max-width:400px; margin:0 auto 16px; line-height:1.5; }
+        .empty-state .supported-formats { font-size:0.72rem; opacity:0.5; margin-top:6px; }
+
+        /* ========== 图片瀑布流 ========== */
+        .masonry-container { display:flex; gap:20px; align-items:flex-start; }
+        .masonry-column { flex:1; display:flex; flex-direction:column; gap:20px; min-width:0; }
+        .masonry-card {
+            background:var(--card); border-radius:16px; overflow:hidden;
+            box-shadow:var(--shadow-sm);
+            transition: box-shadow 0.35s var(--ease-out), transform 0.35s var(--ease-out), background var(--transition);
+            cursor:pointer; position:relative; width:100%;
+            outline: 1px solid transparent;
+            outline-offset: -1px;
+        }
+        .masonry-card:hover {
+            box-shadow:0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,113,227,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+            transform:translateY(-4px);
+            background:var(--card-hover);
+            outline-color: transparent;
+        }
+        .masonry-card:active { transform:scale(0.97); transition:transform 0.1s var(--ease-out); }
+        .masonry-card.drag-over { outline-color: var(--accent); outline-width:2px; box-shadow:0 0 20px var(--accent-glow); }
+        .masonry-card.dragging { opacity:0.4; transform:scale(0.95); }
+        .masonry-card img { display:block; width:100%; height:auto; }
+        /* Blur-up 图片加载 */
+        img.blur-up { filter:blur(12px) brightness(0.9); transition:filter 0.55s var(--ease-out); }
+        img.blur-up.loaded { filter:blur(0) brightness(1); }
+        .masonry-card .card-info { padding:10px 13px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+        .masonry-card .card-name { font-size:0.78rem; font-weight:500; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+        .masonry-card .card-date { font-size:0.68rem; color:var(--text-muted); white-space:nowrap; flex-shrink:0; }
+        .masonry-card .delete-btn {
+            position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%;
+            background:rgba(0,0,0,0.55); color:#fff; border:none; cursor:pointer; font-size:13px;
+            display:flex; align-items:center; justify-content:center; opacity:0;
+            transition:all var(--transition-fast); z-index:5; line-height:1; backdrop-filter:blur(4px);
+        }
+        .masonry-card:hover .delete-btn { opacity:1; }
+        .masonry-card .delete-btn:hover { background:var(--danger); transform:scale(1.15); }
+        /* 拖拽排序手柄 */
+        .masonry-card .drag-handle {
+            position:absolute; top:10px; left:10px; z-index:5;
+            background:rgba(0,0,0,0.45); color:#999; border:none; cursor:grab;
+            font-size:14px; width:28px; height:28px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            opacity:0; transition:all var(--transition-fast); backdrop-filter:blur(4px);
+        }
+        .masonry-card:hover .drag-handle { opacity:1; }
+        .masonry-card .drag-handle:active { cursor:grabbing; background:var(--accent); color:#fff; }
+        .masonry-card.album-card .album-drag-handle { left:14px; z-index:6; }
+        .masonry-card.album-card-img .album-img-drag-handle { z-index:10; }
+
+        /* ========== 文档书架 ========== */
+        .bookshelf-wrapper {
+            background:linear-gradient(180deg, #F2EFEB 0%, #EDE9E4 30%, #E8E4DF 70%, #E3DFDA 100%);
+            border-radius:var(--radius-lg); padding:28px 22px 36px;
+            box-shadow:inset 0 2px 16px rgba(0,0,0,0.06); position:relative; overflow:hidden;
+            border:1px solid var(--border);
+        }
+        .bookshelf-wrapper::before {
+            content:''; position:absolute; top:0; left:0; right:0; bottom:0;
+            background:repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(0,0,0,0.015) 38px, rgba(0,0,0,0.015) 40px),
+                       repeating-linear-gradient(0deg, transparent, transparent 70px, rgba(0,0,0,0.06) 70px, rgba(0,0,0,0.06) 71px);
+            pointer-events:none; z-index:0; border-radius:var(--radius-lg);
+        }
+        .shelf-row {
+            position:relative; z-index:1; margin-bottom:24px; padding-bottom:8px;
+            border-bottom:5px solid var(--shelf-wood-dark); border-radius:2px;
+            box-shadow:0 3px 0 0 var(--shelf-wood), 0 4px 10px rgba(0,0,0,0.08);
+            display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; min-height:170px;
+        }
+        .shelf-row:last-child { margin-bottom:0; }
+        .shelf-row-label { position:absolute; bottom:-24px; left:6px; font-size:0.65rem; color:var(--text-muted); letter-spacing:0.08em; text-transform:uppercase; z-index:2; font-weight:500; }
+        .book-card { width:120px; flex-shrink:0; cursor:pointer; position:relative; transition:all var(--transition); z-index:1; perspective:600px; }
+        .book-card:hover { transform:translateY(-14px) rotateY(-2deg); z-index:10; filter:brightness(1.1); }
+        .book-cover {
+            width:120px; height:165px; border-radius:3px 9px 9px 3px; position:relative;
+            box-shadow:2px 3px 10px rgba(0,0,0,0.08), 1px 1px 3px rgba(0,0,0,0.06);
+            overflow:hidden; display:flex; flex-direction:column; align-items:center;
+            justify-content:center; padding:14px 10px; text-align:center; transition:all var(--transition);
+        }
+        .book-cover::after {
+            content:''; position:absolute; right:0; top:0; bottom:0; width:5px;
+            background:linear-gradient(90deg, rgba(0,0,0,0.06) 0%, transparent 25%, rgba(0,0,0,0.04) 55%, rgba(0,0,0,0.18) 100%);
+            border-radius:0 9px 9px 0; pointer-events:none;
+        }
+        .book-cover::before { content:''; position:absolute; left:12px; top:0; bottom:0; width:1.5px; background:rgba(0,0,0,0.06); pointer-events:none; z-index:2; }
+        .book-icon { font-size:2rem; margin-bottom:6px; opacity:0.85; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.15)); z-index:1; position:relative; transition:transform var(--transition); }
+        .book-card:hover .book-icon { transform:scale(1.1); }
+        .book-title {
+            font-family:var(--font-serif); font-size:0.72rem; font-weight:700; color:var(--text);
+            text-shadow:0 1px 2px rgba(255,255,255,0.5); line-height:1.2;
+            display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+            overflow:hidden; word-break:break-word; z-index:1; position:relative;
+        }
+        .book-type-badge { position:absolute; bottom:8px; z-index:3; background:rgba(255,255,255,0.85); color:var(--text-secondary); font-size:0.6rem; font-weight:700; padding:2px 7px; border-radius:8px; letter-spacing:0.05em; text-transform:uppercase; box-shadow:0 1px 3px rgba(0,0,0,0.08); border:1px solid var(--border); }
+        .book-delete-btn {
+            position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%;
+            background:var(--danger); color:#fff; border:2px solid #fff;
+            cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;
+            opacity:0; transition:all var(--transition-fast); z-index:20; line-height:1;
+            box-shadow:0 2px 6px rgba(0,0,0,0.12);
+        }
+        .book-card:hover .book-delete-btn { opacity:1; }
+        .book-delete-btn:hover { background:var(--danger-hover); transform:scale(1.25); border-color:#fff; }
+        @media (max-width:600px) {
+            .book-card { width:90px; } .book-cover { width:90px; height:130px; padding:8px 6px; }
+            .book-icon { font-size:1.4rem; } .book-title { font-size:0.65rem; }
+            .book-type-badge { font-size:0.55rem; bottom:4px; padding:1px 5px; }
+            .shelf-row { gap:6px; min-height:130px; margin-bottom:16px; }
+        }
+
+        /* ========== 灯箱 ========== */
+        .lightbox-overlay {
+            position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.94);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            animation:fadeIn 0.22s var(--ease-out); backdrop-filter:blur(10px);
+            -webkit-backdrop-filter:blur(10px);
+        }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+        .lightbox-body { display:flex; align-items:flex-start; justify-content:center; gap:20px; max-width:95vw; max-height:82vh; width:100%; }
+        .lightbox-img-wrap { flex:0 1 auto; display:flex; align-items:center; justify-content:center; max-width:75%; }
+        .lightbox-img-wrap img {
+            max-width:100%; max-height:82vh; object-fit:contain; border-radius:8px; box-shadow:var(--shadow-xl);
+            transition:opacity 0.28s var(--ease-out), transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+            opacity:1; transform:translateX(0);
+        }
+        .lightbox-img-wrap img.slide-out-left { opacity:0; transform:translateX(-40px); }
+        .lightbox-img-wrap img.slide-out-right { opacity:0; transform:translateX(40px); }
+        .lightbox-img-wrap img.slide-in-left { animation:slideInFromLeft 0.35s cubic-bezier(0.25,0.46,0.45,0.94); }
+        .lightbox-img-wrap img.slide-in-right { animation:slideInFromRight 0.35s cubic-bezier(0.25,0.46,0.45,0.94); }
+        @keyframes slideInFromLeft { from{opacity:0;transform:translateX(-40px);} to{opacity:1;transform:translateX(0);} }
+        @keyframes slideInFromRight { from{opacity:0;transform:translateX(40px);} to{opacity:1;transform:translateX(0);} }
+        /* 灯箱触摸区域提示 */
+        .lightbox-touch-hint {
+            position:fixed; top:50%; transform:translateY(-50%); z-index:1000;
+            pointer-events:none; opacity:0; transition:opacity 0.3s;
+            font-size:2rem; color:rgba(255,255,255,0.5);
+        }
+        .lightbox-touch-hint.left { left:30px; }
+        .lightbox-touch-hint.right { right:30px; }
+        .lightbox-desc-panel {
+            flex:0 0 260px; background:var(--surface); border-radius:var(--radius);
+            padding:20px 16px; border:1px solid var(--border-light); max-height:82vh;
+            overflow-y:auto; display:flex; flex-direction:column; gap:12px; box-shadow:var(--shadow-lg);
+        }
+        .lightbox-desc-panel .desc-label { font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; }
+        .lightbox-desc-panel .desc-text { font-size:0.88rem; color:var(--text); line-height:1.6; white-space:pre-wrap; word-break:break-word; min-height:50px; }
+        .lightbox-desc-panel .desc-text.placeholder { color:var(--text-muted); font-style:italic; }
+        .lightbox-desc-panel .desc-editable {
+            cursor:text; padding:6px 8px; border-radius:6px; border:1px solid transparent;
+            transition:all var(--transition-fast); margin:-6px -8px;
+        }
+        .lightbox-desc-panel .desc-editable:hover { border-color:var(--border-light); background:var(--bg-soft); }
+        .lightbox-desc-panel .desc-editable.editing { border-color:var(--accent); background:var(--bg-soft); }
+        .lightbox-desc-panel input.desc-name-input {
+            width:100%; background:var(--bg-soft); color:var(--text-bright); border:1px solid var(--accent);
+            padding:6px 8px; border-radius:6px; font-family:var(--font-sans); font-size:0.95rem;
+            font-weight:600;
+        }
+        .lightbox-desc-panel input.desc-name-input:focus { outline:none; border-color:var(--accent-hover); box-shadow:0 0 0 3px var(--accent-soft); }
+        .lightbox-desc-panel .desc-textarea {
+            width:100%; min-height:120px; background:var(--bg-soft); color:var(--text-bright);
+            border:1px solid var(--accent); padding:10px 12px; border-radius:var(--radius-sm);
+            font-family:var(--font-sans); font-size:0.85rem; resize:none; overflow:hidden;
+            line-height:1.6; transition:all var(--transition-fast);
+        }
+        .lightbox-desc-panel .desc-textarea:focus { outline:none; border-color:var(--accent-hover); box-shadow:0 0 0 3px var(--accent-soft); }
+        .lightbox-close {
+            position:fixed; top:16px; right:20px; width:40px; height:40px; border-radius:50%;
+            background:rgba(255,255,255,0.1); color:#fff; border:2px solid rgba(255,255,255,0.25);
+            cursor:pointer; font-size:1.3rem; z-index:1001; display:flex; align-items:center;
+            justify-content:center; transition:all var(--transition-fast);
+        }
+        .lightbox-close:hover { background:rgba(255,255,255,0.25); border-color:#fff; transform:scale(1.08); }
+        .lightbox-nav {
+            position:fixed; top:50%; transform:translateY(-50%); z-index:1001; width:42px; height:42px;
+            border-radius:50%; background:rgba(255,255,255,0.1); color:#fff;
+            border:2px solid rgba(255,255,255,0.25); cursor:pointer; font-size:1.1rem;
+            display:flex; align-items:center; justify-content:center; transition:all var(--transition-fast);
+        }
+        .lightbox-nav:hover { background:rgba(255,255,255,0.3); border-color:#fff; }
+        .lightbox-nav.prev { left:14px; } .lightbox-nav.next { right:14px; }
+        .lightbox_counter {
+            position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+            color:rgba(255,255,255,0.6); font-size:0.8rem; z-index:1001; letter-spacing:0.04em;
+        }
+        @media (max-width:800px) {
+            .lightbox-body { flex-direction:column; align-items:center; gap:12px; }
+            .lightbox-img-wrap { max-width:100%; }
+            .lightbox-img-wrap img { max-height:50vh; }
+            .lightbox-desc-panel { flex:0 0 auto; width:100%; max-width:100%; max-height:30vh; }
+        }
+
+        /* ========== 文档预览模态框 ========== */
+        .doc-preview-overlay {
+            position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.88);
+            display:flex; align-items:center; justify-content:center;
+            animation:fadeIn 0.22s var(--ease-out); backdrop-filter:blur(8px);
+            -webkit-backdrop-filter:blur(8px);
+        }
+        .doc-preview-card {
+            background:var(--surface); border-radius:var(--radius-lg); padding:28px 24px 20px;
+            max-width:750px; width:90%; max-height:85vh; overflow-y:auto;
+            box-shadow:var(--shadow-xl); animation:zoomIn 0.32s var(--ease-spring);
+            position:relative; border:1px solid var(--border-light);
+        }
+        @keyframes zoomIn { from{transform:scale(0.88);opacity:0;} to{transform:scale(1);opacity:1;} }
+        .doc-preview-card h2 {
+            font-family:var(--font-serif); font-size:1.3rem; margin-bottom:6px;
+            color:var(--text-bright); letter-spacing:0.03em; padding-right:40px;
+        }
+        .doc-preview-card .doc-meta { font-size:0.75rem; color:var(--text-muted); margin-bottom:16px; }
+        .doc-preview-card .doc-body {
+            white-space:pre-wrap; font-family:'JetBrains Mono','Fira Code','Courier New','Noto Sans SC',monospace;
+            background:var(--bg-soft); padding:16px 18px; border-radius:var(--radius-sm);
+            line-height:1.7; font-size:0.88rem; color:var(--text); border:1px solid var(--border);
+            max-height:55vh; overflow-y:auto; letter-spacing:0.01em;
+        }
+        .doc-preview-card .doc-file-info { text-align:center; padding:30px 20px; color:var(--text-secondary); }
+        .doc-preview-card .doc-file-info .big-icon { font-size:3rem; margin-bottom:12px; opacity:0.6; }
+        .doc-preview-card .doc-file-info p { font-size:0.9rem; line-height:1.8; }
+        .doc-preview-close {
+            position:absolute; top:12px; right:14px; width:32px; height:32px; border-radius:50%;
+            background:rgba(255,255,255,0.06); color:var(--text-secondary);
+            border:1px solid var(--border-light); cursor:pointer; font-size:1rem;
+            display:flex; align-items:center; justify-content:center; transition:all var(--transition-fast);
+        }
+        .doc-preview-close:hover { background:rgba(220,50,50,0.3); color:#fff; border-color:var(--danger); }
+
+        /* ========== 关于我页面 ========== */
+        .profile-page { animation:fadeSlideIn 0.45s var(--ease-out); }
+        .profile-header { text-align:center; margin-bottom:28px; }
+        .profile-header .profile-name {
+            font-family:var(--font-serif); font-size:2.4rem; font-weight:700;
+            color:var(--text-bright); letter-spacing:0.04em; margin-bottom:4px;
+            transition:color var(--transition);
+        }
+        .profile-header .profile-subtitle { font-size:1rem; color:var(--accent); font-weight:500; letter-spacing:0.05em; }
+        .profile-list { display:flex; flex-direction:column; gap:16px; max-width:700px; margin:0 auto; }
+        .profile-card {
+            background:var(--card); border-radius:var(--radius); padding:22px 20px;
+            border:1px solid var(--border); transition:all var(--transition);
+            box-shadow:var(--shadow-sm); position:relative;
+        }
+        .profile-card:hover { border-color:var(--border-light); box-shadow:var(--shadow-md); background:var(--card-hover); transform:translateY(-2px); }
+        .profile-card .profile-card-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+        .profile-card .profile-card-header .card-icon { font-size:1.2rem; flex-shrink:0; }
+        .profile-card .profile-card-title { font-size:1.05rem; font-weight:600; color:var(--accent); letter-spacing:0.03em; flex:1; }
+        .profile-card .profile-card-title input {
+            width:100%; background:var(--bg-soft); color:var(--text-bright); border:1px solid var(--accent);
+            padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-sans);
+            font-size:1rem; font-weight:600; transition:all var(--transition-fast);
+        }
+        .profile-card .profile-card-title input:focus { outline:none; border-color:var(--accent-hover); box-shadow:0 0 0 3px var(--accent-soft); }
+        .profile-card .card-edit-btns { display:flex; gap:6px; flex-shrink:0; opacity:0; transition:opacity var(--transition-fast); }
+        .profile-card:hover .card-edit-btns { opacity:1; }
+        .profile-card .card-edit-btns button {
+            background:none; border:none; color:var(--text-muted); cursor:pointer;
+            font-size:0.75rem; padding:4px 8px; border-radius:12px; transition:all var(--transition-fast);
+            white-space:nowrap;
+        }
+        .profile-card .card-edit-btns button:hover { color:var(--accent); background:var(--accent-soft); }
+        .profile-card .card-content-wrap { position:relative; }
+        .profile-card .card-content {
+            color:var(--text-secondary); font-size:0.9rem; line-height:1.7; white-space:pre-wrap;
+        }
+        .profile-card .card-content-textarea {
+            width:100%; min-height:90px; background:var(--bg-soft); color:var(--text-bright);
+            border:1px solid var(--accent); padding:10px 14px; border-radius:var(--radius-sm);
+            font-family:var(--font-sans); font-size:0.9rem; line-height:1.6;
+            resize:none; overflow:hidden; transition:all var(--transition-fast);
+        }
+        .profile-card .card-content-textarea:focus { outline:none; border-color:var(--accent-hover); box-shadow:0 0 0 3px var(--accent-soft); }
+        .profile-edit-area { margin-top:20px; text-align:center; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+        /* ========== 新建文本作品模态框 ========== */
+        .modal-form-overlay {
+            position:fixed; inset:0; z-index:998; background:rgba(0,0,0,0.8);
+            display:flex; align-items:center; justify-content:center;
+            animation:fadeIn 0.2s var(--ease-out); backdrop-filter:blur(6px);
+            -webkit-backdrop-filter:blur(6px);
+        }
+        .modal-form-card {
+            background:var(--surface); border-radius:var(--radius-lg); padding:24px 20px;
+            max-width:520px; width:90%; box-shadow:var(--shadow-xl);
+            animation:zoomIn 0.3s var(--ease-spring); border:1px solid var(--border-light);
+        }
+        .modal-form-card h3 { font-family:var(--font-serif); margin-bottom:16px; color:var(--text-bright); font-size:1.15rem; }
+        .modal-form-card label { display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px; font-weight:500; letter-spacing:0.03em; }
+        .modal-form-card input, .modal-form-card textarea {
+            width:100%; background:var(--bg-soft); color:var(--text-bright); border:1px solid var(--border-light);
+            padding:10px 12px; border-radius:var(--radius-sm); font-family:var(--font-sans);
+            font-size:0.88rem; margin-bottom:14px; transition:all var(--transition-fast);
+        }
+        .modal-form-card input:focus, .modal-form-card textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+        .modal-form-card textarea { min-height:130px; resize:vertical; font-family:'JetBrains Mono','Fira Code','Courier New',monospace; line-height:1.6; }
+        .modal-form-actions { display:flex; gap:10px; justify-content:flex-end; }
+
+        /* ========== Toast ========== */
+        .toast-container { position:fixed; bottom:28px; right:20px; z-index:2000; display:flex; flex-direction:column-reverse; gap:10px; pointer-events:none; }
+        .toast {
+            background:var(--surface); color:var(--text); padding:11px 18px; border-radius:50px; border:1px solid var(--border);
+            font-size:0.8rem; font-weight:500; box-shadow:var(--shadow-lg);
+            animation:slideUp 0.35s var(--ease-spring); letter-spacing:0.02em;
+            max-width:360px; word-break:break-word; border:1px solid var(--border-light); pointer-events:auto;
+        }
+        .toast.warning { border-left:3px solid #FF9500; }
+        .toast.error { border-left:3px solid var(--danger); }
+        @keyframes slideUp { from{opacity:0;transform:translateY(28px);} to{opacity:1;transform:translateY(0);} }
+
+        #fileInput { display:none; }
+
+        .drop-zone-highlight {
+            position:fixed; inset:0; z-index:997; background:rgba(0,113,227,0.05);
+            border:3px dashed var(--accent); display:flex; align-items:center; justify-content:center;
+            font-size:1.4rem; font-weight:700; color:var(--accent); pointer-events:none;
+            animation:pulse-border 1.4s var(--ease-in-out) infinite; letter-spacing:0.04em;
+            border-radius:16px; margin:10px;
+        }
+        @keyframes pulse-border {
+            0%,100%{border-color:var(--accent);box-shadow:0 0 30px rgba(0,113,227,0.08);}
+            50%{border-color:var(--accent-hover);box-shadow:0 0 50px rgba(0,113,227,0.15);}
+        }
+
+        /* ========== 画册卡片(瀑布流中的书本形态) ========== */
+        .masonry-card.album-card {
+            min-height: 260px; display:flex; flex-direction:column; justify-content:flex-end;
+            background:linear-gradient(160deg, #F0EDF7 0%, #E8E3F2 100%);
+            cursor:pointer;
+        }
+        /* 多层照片堆叠 — 伪元素模拟翻页感 */
+        .masonry-card.album-card::before {
+            content:''; position:absolute; inset:6px 8px -8px 14px; z-index:0;
+            background:rgba(0,0,0,0.06); border-radius:10px;
+            transform:rotate(-1.5deg);
+            transition:transform 0.35s var(--ease-out), opacity 0.35s var(--ease-out);
+            opacity:0.7; pointer-events:none;
+        }
+        .masonry-card.album-card::after {
+            content:''; position:absolute; inset:4px 6px -5px 18px; z-index:0;
+            background:rgba(0,0,0,0.04); border-radius:8px;
+            transform:rotate(2deg);
+            transition:transform 0.35s var(--ease-out), opacity 0.35s var(--ease-out);
+            opacity:0.5; pointer-events:none;
+        }
+        .masonry-card.album-card:hover::before {
+            transform:rotate(-3deg) translateX(-2px);
+            opacity:1;
+        }
+        .masonry-card.album-card:hover::after {
+            transform:rotate(4deg) translateX(2px);
+            opacity:0.8;
+        }
+        .masonry-card.album-card .album-cover-bg {
+            position:absolute; inset:0; z-index:1;
+            background-size:cover; background-position:center;
+            transition: transform 0.4s var(--ease-out);
+        }
+        .masonry-card.album-card:hover .album-cover-bg {
+            transform:translateX(-4px) scale(1.04);
+        }
+        .masonry-card.album-card .album-spine {
+            position:absolute; left:0; top:0; bottom:0; width:9px; z-index:2;
+            background:linear-gradient(90deg, rgba(0,0,0,0.06) 0%, transparent 20%, rgba(0,0,0,0.06) 60%, rgba(0,0,0,0.15) 100%);
+            pointer-events:none;
+        }
+        .masonry-card.album-card .album-title-overlay {
+            position:relative; z-index:1;
+            padding:50px 14px 14px;
+            background:linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);
+            color:#fff; font-family:var(--font-serif); font-size:0.95rem;
+            font-weight:700; letter-spacing:0.03em;
+            text-shadow:0 1px 3px rgba(0,0,0,0.5);
+            line-height:1.25;
+        }
+        .masonry-card.album-card .album-badge {
+            display:inline-block; background:var(--accent); color:#fff;
+            font-family:var(--font-sans); font-size:0.6rem; font-weight:700;
+            padding:2px 8px; border-radius:10px; margin-top:6px;
+            letter-spacing:0.06em;
+        }
+        .masonry-card.album-card .album-count {
+            font-family:var(--font-sans); font-size:0.65rem; font-weight:400;
+            color:rgba(255,255,255,0.7); margin-top:2px;
+        }
+
+        /* ========== 画册灯箱 L2 ========== */
+        .album-overlay {
+            position:fixed; inset:0; z-index:998; background:var(--bg);
+            display:flex; flex-direction:column;
+            animation:fadeSlideIn 0.28s var(--ease-out);
+        }
+        .album-header {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 20px; border-bottom:1px solid var(--border);
+            background:var(--surface); z-index:2; flex-shrink:0; flex-wrap:wrap;
+        }
+        .album-header h2 {
+            font-family:var(--font-serif); font-size:1.15rem;
+            color:var(--text-bright); flex:1; min-width:0;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        }
+        .album-body {
+            flex:1; overflow-y:auto; padding:20px 18px 40px;
+        }
+        .album-body .masonry-container { max-width:1100px; margin:0 auto; }
+        .album-empty {
+            text-align:center; padding:80px 20px; color:var(--text-secondary);
+        }
+
+        /* 画册内图片卡片的操作按钮 */
+        .album-card-img .img-actions {
+            position:absolute; bottom:8px; left:8px; right:8px; z-index:5;
+            display:flex; gap:6px; opacity:0; transition:opacity var(--transition-fast);
+        }
+        .album-card-img:hover .img-actions { opacity:1; }
+        .album-card-img .img-actions button {
+            background:rgba(0,0,0,0.72); color:#ddd; border:none; cursor:pointer;
+            font-size:0.66rem; padding:4px 10px; border-radius:12px;
+            transition:all var(--transition-fast); backdrop-filter:blur(4px);
+            font-family:var(--font-sans);
+        }
+        .album-card-img .img-actions button:hover { background:var(--accent); color:#fff; }
+        .album-card-img .img-actions button.danger:hover { background:var(--danger); }
+
+        /* 移至画册选择器 */
+        .album-picker-list { display:flex; flex-direction:column; gap:8px; max-height:250px; overflow-y:auto; margin-bottom:14px; }
+        .album-picker-item {
+            background:var(--bg-soft); color:var(--text); border:1px solid var(--border-light);
+            padding:10px 14px; border-radius:var(--radius-sm); cursor:pointer;
+            transition:all var(--transition-fast); text-align:left;
+            font-family:var(--font-sans); font-size:0.88rem;
+        }
+        .album-picker-item:hover { border-color:var(--accent); background:var(--accent-soft); }
+
+        /* 瀑布流卡片上的移至画册按钮 */
+        .masonry-card .move-album-btn {
+            position:absolute; top:10px; right:40px; z-index:5;
+            padding:3px 9px; font-size:0.64rem; opacity:0;
+            transition:opacity var(--transition-fast);
+        }
+        .masonry-card:hover .move-album-btn { opacity:1; }
+
+        ::-webkit-scrollbar { width:5px; height:5px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:#C8C8CE; border-radius:20px; }
+        ::-webkit-scrollbar-thumb:hover { background:#A0A0A8; }
+
+        @media (max-width:700px) {
+            .navbar { padding:0 10px; height:50px; gap:6px; }
+            .nav-tab { padding:7px 12px; font-size:0.75rem; }
+            .btn { padding:6px 12px; font-size:0.72rem; }
+            .btn-filter { padding:8px 18px; font-size:0.82rem; }
+            .profile-header .profile-name { font-size:1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 导航栏 ==================== -->
+    <nav class="navbar">
+        <div class="nav-tabs" id="navTabs">
+            <button class="nav-tab active" data-page="profile">简历</button>
+            <button class="nav-tab" data-page="images">美术</button>
+            <button class="nav-tab" data-page="documents">文案</button>
+        </div>
+        <div class="nav-actions">
+            <button class="btn btn-accent btn-sm" onclick="document.getElementById('fileInput').click()" title="上传文件">上传</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportFullData()" title="导出 data.json">导出</button>
+            <button class="btn btn-accent btn-sm" id="btnNewAlbum" style="display:none;" onclick="createAlbum()">+ 画册</button>
+            <button class="btn btn-ghost btn-icon btn-sm" id="adminToggle" title="管理">管</button>
+        </div>
+    </nav>
+    <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.csv,.rtf">
+
+    <!-- ==================== 主容器 ==================== -->
+    <main class="main-container" id="mainContainer"></main>
+
+    <!-- 灯箱 -->
+    <div id="lightbox" style="display:none;"></div>
+    <!-- 文档预览模态框 -->
+    <div id="textPreviewBox" style="display:none;"></div>
+    <!-- 画册灯箱 L2 -->
+    <div id="albumLightbox" style="display:none;"></div>
+    <!-- 新建文本作品模态框 -->
+    <div id="newTextModal" style="display:none;"></div>
+    <!-- Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+    <!-- 拖拽高亮 -->
+    <div id="dropHighlight" class="drop-zone-highlight" style="display:none;">松开以添加作品</div>
+
+    <script>
+        (function() {
+            // ==================== 常量 ====================
+            const STORAGE_KEY = 'portfolio_dark_v3';
+            const MAX_STORAGE_MB = 7;
+            const IMAGE_EXTENSIONS = new Set(['jpg','jpeg','png','gif','webp','svg','bmp','ico','tiff','heic']);
+            const DOCUMENT_EXTENSIONS = new Set(['pdf','doc','docx','ppt','pptx','xls','xlsx','txt','md','csv','rtf','odt','ods','odp']);
+            const TEXT_EXTENSIONS = new Set(['txt','md','csv','rtf','log','json','xml','yaml','yml']);
+
+            const BOOK_COLORS = [
+                'linear-gradient(160deg, #D5D8E8 0%, #B8BDD4 100%)',
+                'linear-gradient(160deg, #E2D0D0 0%, #C8B0B0 100%)',
+                'linear-gradient(160deg, #C8D8CE 0%, #A8BFAE 100%)',
+                'linear-gradient(160deg, #D5CEE0 0%, #B8ADD0 100%)',
+                'linear-gradient(160deg, #DDD0C2 0%, #C4B0A0 100%)',
+                'linear-gradient(160deg, #C8D2DC 0%, #A8B5C2 100%)',
+                'linear-gradient(160deg, #D8C8DC 0%, #C0A8C8 100%)',
+                'linear-gradient(160deg, #C8D5CC 0%, #A8BBAE 100%)',
+                'linear-gradient(160deg, #D2CDE0 0%, #B5ADD0 100%)',
+                'linear-gradient(160deg, #DCCCC0 0%, #C4B0A0 100%)',
+            ];
+            const DOC_ICONS = {
+                'pdf':'[PDF]','doc':'[DOC]','docx':'[DOC]','ppt':'[PPT]','pptx':'[PPT]',
+                'xls':'[XLS]','xlsx':'[XLS]','txt':'[TXT]','md':'[MD]','csv':'[CSV]',
+                'rtf':'[RTF]','odt':'[DOC]','ods':'[XLS]','odp':'[PPT]',
+            };
+
+            // ==================== 默认数据 ====================
+            const DEFAULT_PROFILE = {
+                name: '你的名字',
+                subtitle: '设计师 / 创作者',
+                sections: [
+                    { id:'about', icon:'*', title:'关于我', content:'在这里写下你的个人简介...\n分享你的背景、兴趣和创作理念。' },
+                    { id:'skills', icon:'*', title:'技能', content:'- 技能一\n- 技能二\n- 技能三' },
+                    { id:'experience', icon:'*', title:'经历', content:'2023 - 至今  某公司 - 职位\n2021 - 2023  某项目 - 角色' },
+                    { id:'contact', icon:'*', title:'联系方式', content:'邮箱: email@example.com\n微信: your_id\nGitHub: @username' },
+                ]
+            };
+
+            // ==================== 状态 ====================
+            let appData = { works:[], profile:JSON.parse(JSON.stringify(DEFAULT_PROFILE)) };
+            let currentPage = 'profile';
+            let isAdmin = false;
+            let lightboxImages = [];
+            let lightboxIndex = 0;
+            let dragData = null; // 拖拽排序临时数据
+            let currentAlbumId = null;    // 当前打开的画册ID（L2→L3上下文）
+            let albumLightboxImages = []; // 画册内图片列表（L3导航用）
+
+            // ==================== DOM ====================
+            const mainContainer = document.getElementById('mainContainer');
+            const fileInput = document.getElementById('fileInput');
+            const dropHighlight = document.getElementById('dropHighlight');
+            const toastContainer = document.getElementById('toastContainer');
+            const lightboxEl = document.getElementById('lightbox');
+            const textPreviewBox = document.getElementById('textPreviewBox');
+            const newTextModal = document.getElementById('newTextModal');
+            const adminToggle = document.getElementById('adminToggle');
+
+            // ==================== 工具函数 ====================
+            function generateId() { return 'item_'+Date.now()+'_'+Math.random().toString(36).substring(2,8); }
+            function getExtension(fn) { const p=fn.split('.'); return p.length>1?p.pop().toLowerCase():''; }
+            function formatDate(ts) { const d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+            function formatSize(b) { return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB'; }
+            function getDocIcon(ext) { return DOC_ICONS[ext]||'[FILE]'; }
+            function getBookColor(id) { let h=0; for(let i=0;i<id.length;i++){ h=((h<<5)-h)+id.charCodeAt(i); h|=0; } return BOOK_COLORS[Math.abs(h)%BOOK_COLORS.length]; }
+            function escapeHTML(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+            function showToast(msg,type='') {
+                const t=document.createElement('div'); t.className='toast '+type; t.textContent=msg;
+                toastContainer.appendChild(t);
+                setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(18px)';t.style.transition='0.25s ease';setTimeout(()=>t.remove(),260);},2600);
+            }
+
+            // ==================== 数据持久化 ====================
+            function getStorageUsageMB() {
+                try {
+                    const json = JSON.stringify(appData);
+                    return new Blob([json]).size / 1048576;
+                } catch(e) { return 0; }
+            }
+            function trySaveToLocal(context) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                    return true;
+                } catch(e) {
+                    const usageMB = getStorageUsageMB();
+                    if (e.name === 'QuotaExceededError' || (e+'').indexOf('quota')>=0 || usageMB > 4.5) {
+                        const msg = '存储空间已满('+usageMB.toFixed(1)+'MB/5MB)。请导出 data.json 后清理部分作品。';
+                        showToast(msg, 'error');
+                    } else {
+                        showToast('保存失败: ' + (e.message||e), 'error');
+                    }
+                    return false;
+                }
+            }
+            function saveToLocal() { trySaveToLocal(); }
+            let _localStorageAvailable = true;
+            function loadFromLocal() {
+                try {
+                    const raw=localStorage.getItem(STORAGE_KEY);
+                    if(raw){
+                        try { const d=JSON.parse(raw); if(d.works&&d.profile){ appData=d; return true; } }
+                        catch(parseErr) { /* 数据损坏，丢弃后回退到默认数据 */ return false; }
+                    }
+                } catch(e) {
+                    // 仅在存储真正不可用时禁用
+                    if(e.name==='SecurityError'||e instanceof DOMException) _localStorageAvailable = false;
+                    return false;
+                }
+                return false;
+            }
+            async function loadFromJSON() {
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 3000);
+                    const resp = await fetch('data.json', { cache:'no-cache', signal: controller.signal });
+                    clearTimeout(timeout);
+                    if(!resp.ok) return false;
+                    const d = await resp.json();
+                    if(d.works&&d.profile){ appData=d; trySaveToLocal(); return true; }
+                } catch(e) { /* data.json 不存在或网络不可达，使用本地存储回退 */ }
+                return false;
+            }
+            function exportFullData() {
+                // 大文件导出警告
+                const totalSizeMB = getStorageUsageMB();
+                if(totalSizeMB > 10 && !confirm('data.json 约 '+totalSizeMB.toFixed(1)+'MB，导出可能较慢。是否继续？')) return;
+                const blob=new Blob([JSON.stringify(appData,null,2)],{type:'application/json'});
+                const url=URL.createObjectURL(blob); const a=document.createElement('a');
+                a.href=url; a.download='data.json'; document.body.appendChild(a); a.click();
+                document.body.removeChild(a); URL.revokeObjectURL(url);
+                showToast('已导出 data.json（含 '+appData.works.length+' 个作品 + 简历）');
+            }
+
+            // ==================== 文件处理 ====================
+            function readFileAsBase64(file) {
+                return new Promise((resolve,reject)=>{ const reader=new FileReader(); reader.onload=()=>resolve(reader.result); reader.onerror=()=>reject(new Error('读取失败')); reader.readAsDataURL(file); });
+            }
+            async function addFiles(fileList) {
+                const files=Array.from(fileList); let added=0,skipped=0;
+                const newWorks = []; // 批量收集避免循环内多次 unshift
+                for(const file of files) {
+                    const ext=getExtension(file.name); const isImg=IMAGE_EXTENSIONS.has(ext); const isDoc=DOCUMENT_EXTENSIONS.has(ext);
+                    if(!isImg&&!isDoc){ skipped++; continue; }
+                    if(file.size>MAX_STORAGE_MB*1024*1024){ showToast('"'+file.name+'" 超过'+MAX_STORAGE_MB+'MB，已跳过','warning'); skipped++; continue; }
+                    try {
+                        const dataUrl=await readFileAsBase64(file);
+                        const work = {
+                            id:generateId(), type:isImg?'image':'document', name:file.name, data:dataUrl,
+                            mimeType:file.type||(isImg?'image/'+ext:'application/'+ext), size:file.size,
+                            dateAdded:Date.now(), extension:ext, description:'',
+                        };
+                        // 捕获图片尺寸（用于瀑布流高度计算）
+                        if (isImg && dataUrl) {
+                            try {
+                                const dims = await getImageDimensions(dataUrl);
+                                if (dims) { work.imgWidth = dims.w; work.imgHeight = dims.h; }
+                            } catch(e) {}
+                        }
+                        newWorks.push(work);
+                        added++;
+                    } catch(err){ skipped++; }
+                }
+                // 一次性倒序插入，O(n) 批量操作
+                appData.works.unshift(...newWorks.reverse());
+                if(added>0){ const ok=trySaveToLocal(); renderPage(); if(ok) showToast('已添加 '+added+' 个作品'); }
+                if(skipped>0) showToast('跳过 '+skipped+' 个文件','warning');
+            }
+            function findWorkById(id) {
+                // 先在顶级works中找
+                let w = appData.works.find(x => x.id === id);
+                if (w) return w;
+                // 再在所有画册中找
+                for (const album of appData.works) {
+                    if (album.type === 'album' && album.images) {
+                        w = album.images.find(x => x.id === id);
+                        if (w) return w;
+                    }
+                }
+                return null;
+            }
+            function deleteWork(id) {
+                const w = appData.works.find(x=>x.id===id);
+                const msg = w && w.type === 'album' ? `确定删除画册"${w.name}"及其内部全部图片？不可恢复。` : '确定删除？不可恢复。';
+                if(!confirm(msg)) return;
+                appData.works=appData.works.filter(w=>w.id!==id); saveToLocal(); renderPage(); showToast('已删除');
+            }
+            function createTextWork(title,content) {
+                const dataUrl='data:text/plain;base64,'+btoa(encodeURIComponent(content).replace(/%([0-9A-F]{2})/g, (_,p) => String.fromCharCode(parseInt(p,16))));
+                const work={ id:generateId(), type:'document', name:(title||'未命名')+'.txt', data:dataUrl, mimeType:'text/plain', size:new Blob([content]).size, dateAdded:Date.now(), extension:'txt', isPlainText:true, description:'' };
+                appData.works.unshift(work); saveToLocal(); renderPage(); showToast('文本作品已创建');
+            }
+            function decodeTextContent(work) {
+                if(!work.data) return '(无内容)'; const dataUrl=work.data; const commaIdx=dataUrl.indexOf(','); if(commaIdx<0) return dataUrl;
+                const base64=dataUrl.substring(commaIdx+1);
+                try {
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    return new TextDecoder().decode(bytes);
+                } catch(e){ try { return atob(base64); } catch(e2){ return '(无法解码)'; } }
+            }
+            function isTextPreviewable(work) {
+                if(work.isPlainText) return true;
+                if(work.type==='document'&&TEXT_EXTENSIONS.has(work.extension)) return true;
+                if(work.mimeType&&work.mimeType.startsWith('text/')) return true;
+                if(work.extension==='docx') return true;
+                return false;
+            }
+
+            // ==================== JSZip 懒加载 ====================
+            let _jszipReady = false, _jszipLoading = false;
+            async function ensureJSZip() {
+                if (typeof JSZip !== 'undefined') { _jszipReady = true; return true; }
+                if (_jszipLoading) {
+                    // 等待已经在进行的加载
+                    for (let i = 0; i < 100; i++) {
+                        if (_jszipReady) return true;
+                        await new Promise(r => setTimeout(r, 50));
+                    }
+                    return false;
+                }
+                _jszipLoading = true;
+                try {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                        s.onload = () => { _jszipLoading = false; resolve(); };
+                        s.onerror = () => { _jszipLoading = false; reject(new Error('CDN 加载失败')); };
+                        document.head.appendChild(s);
+                    });
+                    _jszipReady = true;
+                    return true;
+                } catch (e) {
+                    _jszipLoading = false;
+                    return false;
+                }
+            }
+
+            // ==================== DOCX 文本提取 ====================
+            async function extractDocxText(dataUrl) {
+                const ok = await ensureJSZip();
+                if (!ok) return '(JSZip 无法加载，暂时无法解析 DOCX。请检查网络连接。)'
+                try {
+                    const base64 = dataUrl.substring(dataUrl.indexOf(',')+1);
+                    const zip = await JSZip.loadAsync(base64, {base64:true});
+                    const docXmlFile = zip.file('word/document.xml');
+                    if(!docXmlFile) return '(DOCX 文件结构异常)';
+                    const xmlStr = await docXmlFile.async('string');
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlStr, 'text/xml');
+                    const tEls = xmlDoc.getElementsByTagNameNS('*','t');
+                    const paragraphs = [];
+                    let currentPara = '';
+                    const pTags = xmlDoc.getElementsByTagNameNS('*','p');
+                    for(const p of pTags) {
+                        const tNodes = p.getElementsByTagNameNS('*','t');
+                        let txt = '';
+                        for(const t of tNodes) { txt += t.textContent; }
+                        paragraphs.push(txt);
+                    }
+                    return paragraphs.join('\n') || '(文档无文本内容)';
+                } catch(e) { return '(DOCX 解析失败: '+e.message+')'; }
+            }
+            async function showDocxPreviewAsync(w) {
+                const loadingEl = document.getElementById('docxLoading');
+                if(loadingEl) {
+                    loadingEl.textContent = '正在解析 DOCX 文件...';
+                    const text = await extractDocxText(w.data);
+                    if(document.getElementById('docxLoading') === loadingEl) {
+                        loadingEl.textContent = text;
+                        loadingEl.style.whiteSpace = 'pre-wrap';
+                    }
+                }
+            }
+
+            // ==================== 渲染 ====================
+            function renderPage() {
+                if(currentPage==='profile') mainContainer.innerHTML = renderProfilePage();
+                else if(currentPage==='images') mainContainer.innerHTML = renderImagesPage();
+                else if(currentPage==='documents') mainContainer.innerHTML = renderDocumentsPage();
+                updateNavTabs(); updateAdminUI();
+                if(currentPage==='images'||currentPage==='documents') attachWorkEvents();
+                if(currentPage==='profile'&&isAdmin) attachProfileEvents();
+            }
+            function updateNavTabs() {
+                document.querySelectorAll('#navTabs .nav-tab').forEach(b=>{ b.classList.toggle('active',b.dataset.page===currentPage); });
+            }
+            function updateAdminUI() {
+                adminToggle.innerHTML = isAdmin ? '退出管理' : '管理';
+                const albumBtn = document.getElementById('btnNewAlbum');
+                if (albumBtn) albumBtn.style.display = (isAdmin && currentPage==='images') ? '' : 'none';
+            }
+            function renderImagesPage() {
+                const allImgs = appData.works.filter(w=>w.type==='image');
+                const allAlbums = appData.works.filter(w=>w.type==='album');
+                const allMedia = [...allImgs, ...allAlbums];
+                const totalSize = allImgs.reduce((s,w)=>s+(w.size||0),0);
+                const usageMB = getStorageUsageMB();
+                let html = '';
+                html+=`<div class="stats-bar"><span class="stat">图片 <strong>${allImgs.length}</strong></span><span class="stats-sep"></span><span class="stat">画册 <strong>${allAlbums.length}</strong></span><span class="stats-sep"></span><span class="stat">大小 <strong>${formatSize(totalSize)}</strong></span><span class="stats-sep"></span><span class="stat" style="color:${usageMB>4?'var(--danger)':''}">存储 <strong>${usageMB.toFixed(1)}</strong>/5MB</span></div>`;
+                if(allMedia.length===0) {
+                    html+=renderEmptyState('美术');
+                } else {
+                    html+=renderMasonry(allMedia);
+                }
+                return html;
+            }
+            function renderDocumentsPage() {
+                const allDocs = appData.works.filter(w=>w.type==='document');
+                const totalSize = allDocs.reduce((s,w)=>s+(w.size||0),0);
+                const usageMB = getStorageUsageMB();
+                let html = '';
+                html+=`<div class="stats-bar"><span class="stat">文档 <strong>${allDocs.length}</strong></span><span class="stats-sep"></span><span class="stat">大小 <strong>${formatSize(totalSize)}</strong></span><span class="stats-sep"></span><span class="stat" style="color:${usageMB>4?'var(--danger)':''}">存储 <strong>${usageMB.toFixed(1)}</strong>/5MB</span></div>`;
+                if(allDocs.length===0) {
+                    html+=renderEmptyState('文案');
+                } else {
+                    html+=renderBookshelf(allDocs);
+                }
+                return html;
+            }
+            function renderEmptyState(label) {
+                return `
+                <div class="empty-state">
+                    <div class="empty-icon">[-]</div>
+                    <h3>还没有${label}</h3>
+                    <p>拖拽文件到页面，或点击「上传」按钮来添加${label}作品。</p>
+                    <button class="btn btn-accent" style="margin-top:16px;" onclick="document.getElementById('fileInput').click()">上传作品</button>
+                </div>`;
+            }
+            function getColumnCount() {
+                const w = window.innerWidth;
+                if (w < 600) return 1;
+                if (w < 900) return 2;
+                if (w < 1200) return 3;
+                return 4;
+            }
+            function estimateImageHeight(work, colWidth) {
+                if (work.type === 'album') return 260; // 画册卡片固定高度
+                if (work.imgWidth && work.imgHeight && work.imgWidth > 0) {
+                    return colWidth * (work.imgHeight / work.imgWidth);
+                }
+                return colWidth; // 未知比例默认正方形
+            }
+            // 瀑布流列分配算法（renderMasonry 与 renderMasonryForAlbum 共用）
+            function _buildMasonryColumns(works, opts) {
+                const { containerMaxWidth = 1300, sortAlbumsFirst = false } = opts || {};
+                let sortedWorks = [...works];
+                if (sortAlbumsFirst) {
+                    sortedWorks.sort((a, b) => {
+                        if (a.type === 'album' && b.type !== 'album') return -1;
+                        if (a.type !== 'album' && b.type === 'album') return 1;
+                        return 0;
+                    });
+                }
+                const colCount = getColumnCount();
+                const containerWidth = Math.min(window.innerWidth - 36, containerMaxWidth);
+                const colWidth = (containerWidth - 20 * (colCount - 1)) / colCount;
+                const columns = Array.from({length: colCount}, () => ({ works: [], height: 0 }));
+                for (const w of sortedWorks) {
+                    const estH = estimateImageHeight(w, colWidth);
+                    let minIdx = 0;
+                    for (let i = 1; i < columns.length; i++) {
+                        if (columns[i].height < columns[minIdx].height) minIdx = i;
+                    }
+                    columns[minIdx].works.push(w);
+                    columns[minIdx].height += estH + 20;
+                }
+                return columns;
+            }
+            function renderMasonry(imgWorks) {
+                const columns = _buildMasonryColumns(imgWorks, { sortAlbumsFirst: true });
+                let h = '<div class="masonry-container">';
+                for (const col of columns) {
+                    h += '<div class="masonry-column">';
+                    for (const w of col.works) {
+                        if (w.type === 'album') {
+                            const hasCover = w.coverImage && w.coverImage.trim();
+                            const imgCount = w.images ? w.images.length : 0;
+                            h += `
+                    <div class="masonry-card album-card" data-id="${w.id}" data-action="open-album" draggable="${isAdmin?'true':'false'}" data-drag-type="album" data-drag-context="works" role="button" tabindex="0" aria-label="画册：${escapeHTML(w.name)}">
+                        ${isAdmin ? `<span class="drag-handle album-drag-handle" data-action="drag-handle" title="拖动排序">::</span>` : ''}
+                        ${isAdmin ? `<button class="delete-btn" data-action="delete" data-id="${w.id}" title="删除">x</button>` : ''}
+                        ${hasCover ? `<div class="album-cover-bg" style="background-image:url(${w.coverImage.replace(/"/g,'&quot;')});"></div>` : ''}
+                        <div class="album-spine"></div>
+                        <div class="album-title-overlay">
+                            <div>${escapeHTML(w.name)}</div>
+                            <span class="album-badge">画册</span>
+                            <span class="album-count">${imgCount} 张图片</span>
+                        </div>
+                    </div>`;
+                        } else {
+                            h += `
+                    <div class="masonry-card" data-id="${w.id}" data-action="view-image" draggable="${isAdmin?'true':'false'}" data-drag-type="image" data-drag-context="works" role="button" tabindex="0" aria-label="${escapeHTML(w.name)}">
+                        ${isAdmin ? `<span class="drag-handle" data-action="drag-handle" title="拖动排序">::</span>` : ''}
+                        ${isAdmin ? `<button class="delete-btn" data-action="delete" data-id="${w.id}" title="删除">x</button>` : ''}
+                        ${isAdmin ? `<button class="btn btn-accent btn-sm move-album-btn" data-action="move-album" data-img-id="${w.id}" title="移至画册">移至</button>` : ''}
+                        <img src="${w.data}" alt="${escapeHTML(w.name)}" class="blur-up" onload="this.classList.add('loaded')">
+                        <div class="card-info"><span class="card-name" title="${escapeHTML(w.name)}">${escapeHTML(w.name)}</span><span class="card-date">${formatDate(w.dateAdded)}</span></div>
+                    </div>`;
+                        }
+                    }
+                    h += '</div>';
+                }
+                h += '</div>';
+                return h;
+            }
+            function renderBookshelf(docWorks) {
+                const perRow=6; const rows=[];
+                for(let i=0;i<docWorks.length;i+=perRow) rows.push(docWorks.slice(i,i+perRow));
+                let h='<div class="bookshelf-wrapper">';
+                rows.forEach((row,ri)=>{
+                    h+=`<div class="shelf-row"><span class="shelf-row-label">搁板 ${ri+1}</span>`;
+                    row.forEach((w,idx)=>{
+                        h+=`
+                        <div class="book-card" data-id="${w.id}" data-action="open-doc" role="button" tabindex="0" aria-label="${escapeHTML(w.name)}">
+                            ${isAdmin?`<button class="book-delete-btn" data-action="delete" data-id="${w.id}" title="删除">x</button>`:''}
+                            <div class="book-cover" style="background:${getBookColor(w.id)};">
+                                <span class="book-icon">${getDocIcon(w.extension)}</span>
+                                <span class="book-title">${escapeHTML(w.name)}</span>
+                                <span class="book-type-badge">${w.extension.toUpperCase()}</span>
+                            </div>
+                        </div>`;
+                    });
+                    h+='</div>';
+                });
+                h+='</div>'; return h;
+            }
+
+            function renderProfilePage() {
+                const p=appData.profile;
+                let cardsHtml=p.sections.map(sec=>`
+                    <div class="profile-card" data-section-id="${sec.id}">
+                        <div class="profile-card-header">
+                            <span class="card-icon">${escapeHTML(sec.icon||'*')}</span>
+                            <div class="profile-card-title" data-type="title" data-id="${sec.id}">${escapeHTML(sec.title)}</div>
+                            ${isAdmin?`
+                            <div class="card-edit-btns">
+                                <button data-action="edit-title" data-id="${sec.id}">标题</button>
+                                <button data-action="edit-content" data-id="${sec.id}">内容</button>
+                            </div>`:''}
+                        </div>
+                        <div class="card-content-wrap">
+                            <div class="card-content" data-type="content" data-id="${sec.id}">${escapeHTML(sec.content)}</div>
+                        </div>
+                    </div>
+                `).join('');
+                return `
+                <div class="profile-page">
+                    <div class="profile-header">
+                        <div class="profile-name">${escapeHTML(p.name)}</div>
+                        <div class="profile-subtitle">${escapeHTML(p.subtitle)}</div>
+                    </div>
+                    <div class="profile-list">${cardsHtml}</div>
+                    ${isAdmin?`
+                    <div class="profile-edit-area" style="margin-top:22px;">
+                        <button class="btn btn-accent btn-sm" onclick="editProfileHeader()">编辑标题</button>
+                        <button class="btn btn-ghost btn-sm" onclick="addProfileSection()">+ 新增栏目</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportFullData()">导出 data.json</button>
+                    </div>`:''}
+                </div>`;
+            }
+
+            // ==================== 作品页事件 ====================
+            function attachWorkEvents() {
+                document.querySelectorAll('[data-action="view-image"]').forEach(el=>{
+                    el.addEventListener('click',(e)=>{ if(e.target.closest('[data-action="delete"]')||e.target.closest('[data-action="drag-handle"]')||e.target.closest('[data-action="move-album"]')) return; openLightbox(el.dataset.id); });
+                });
+                document.querySelectorAll('[data-action="open-album"]').forEach(el=>{
+                    el.addEventListener('click',(e)=>{ if(e.target.closest('[data-action="delete"]')||e.target.closest('[data-action="drag-handle"]')) return; openAlbum(el.dataset.id); });
+                });
+                document.querySelectorAll('[data-action="open-doc"]').forEach(el=>{
+                    el.addEventListener('click',(e)=>{ if(e.target.closest('[data-action="delete"]')) return; openDocument(el.dataset.id); });
+                });
+                document.querySelectorAll('[data-action="delete"]').forEach(btn=>{
+                    btn.addEventListener('click',(e)=>{ e.stopPropagation(); deleteWork(btn.dataset.id); });
+                });
+                document.querySelectorAll('[data-action="move-album"]').forEach(btn=>{
+                    btn.addEventListener('click',(e)=>{ e.stopPropagation(); showAlbumPicker(btn.dataset.imgId); });
+                });
+
+                // === 拖拽排序 ===
+                if(isAdmin) attachDragSort();
+            }
+
+            function attachDragSort() {
+                const cards = document.querySelectorAll('.masonry-card[draggable="true"]');
+                cards.forEach(card => {
+                    card.addEventListener('dragstart', handleDragStart);
+                    card.addEventListener('dragend', handleDragEnd);
+                    card.addEventListener('dragover', handleDragOver);
+                    card.addEventListener('dragleave', handleDragLeave);
+                    card.addEventListener('drop', handleDrop);
+                });
+                // 拖拽手柄也触发卡片的drag
+                document.querySelectorAll('[data-action="drag-handle"]').forEach(handle => {
+                    handle.addEventListener('mousedown', (e) => {
+                        const card = e.target.closest('.masonry-card');
+                        if(card) card.draggable = true;
+                    });
+                });
+            }
+            function handleDragStart(e) {
+                const card = this;
+                card.draggable = true;
+                dragData = { id: card.dataset.id, context: card.dataset.dragContext || 'works', albumId: card.dataset.albumId };
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', card.dataset.id);
+                requestAnimationFrame(() => { card.classList.add('dragging'); });
+            }
+            function handleDragEnd(e) {
+                this.classList.remove('dragging');
+                document.querySelectorAll('.masonry-card.drag-over').forEach(c => c.classList.remove('drag-over'));
+                dragData = null;
+                this.draggable = true; // 恢复
+            }
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if(!dragData || dragData.id === this.dataset.id) return;
+                this.classList.add('drag-over');
+            }
+            function handleDragLeave(e) {
+                this.classList.remove('drag-over');
+            }
+            function handleDrop(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                if(!dragData || dragData.id === this.dataset.id) return;
+                const srcId = dragData.id;
+                const dstId = this.dataset.id;
+
+                if (dragData.context === 'album' && dragData.albumId) {
+                    // 画册内部拖拽
+                    const album = appData.works.find(w => w.id === dragData.albumId);
+                    if (!album || !album.images) return;
+                    const srcIdx = album.images.findIndex(img => img.id === srcId);
+                    const dstIdx = album.images.findIndex(img => img.id === dstId);
+                    if (srcIdx < 0 || dstIdx < 0) return;
+                    const [moved] = album.images.splice(srcIdx, 1);
+                    const newDstIdx = album.images.findIndex(img => img.id === dstId);
+                    album.images.splice(newDstIdx, 0, moved);
+                    albumLightboxImages = album.images;
+                    saveToLocal();
+                    renderAlbumLightbox(album);
+                    showToast('排序已更新');
+                } else {
+                    // 主瀑布流拖拽
+                    const srcIdx = appData.works.findIndex(w => w.id === srcId);
+                    const dstIdx = appData.works.findIndex(w => w.id === dstId);
+                    if(srcIdx < 0 || dstIdx < 0) return;
+                    const [moved] = appData.works.splice(srcIdx, 1);
+                    const newDstIdx = appData.works.findIndex(w => w.id === dstId);
+                    appData.works.splice(newDstIdx, 0, moved);
+                    saveToLocal();
+                    renderPage();
+                    showToast('排序已更新');
+                }
+                dragData = null;
+            }
+
+            function attachProfileEvents() {
+                document.querySelectorAll('[data-action="edit-title"]').forEach(btn=>{
+                    btn.addEventListener('click',(e)=>{ e.stopPropagation(); editSectionTitle(btn.dataset.id); });
+                });
+                document.querySelectorAll('[data-action="edit-content"]').forEach(btn=>{
+                    btn.addEventListener('click',(e)=>{ e.stopPropagation(); editSectionContent(btn.dataset.id); });
+                });
+            }
+
+            // ==================== 灯箱 ====================
+            function openLightbox(imageId, imageList=null) {
+                if (imageList) {
+                    lightboxImages = imageList;
+                } else {
+                    lightboxImages = appData.works.filter(w=>w.type==='image');
+                }
+                lightboxIndex = lightboxImages.findIndex(w=>w.id===imageId);
+                if(lightboxIndex<0) return;
+                showLightbox();
+            }
+            function showLightbox() {
+                const w=lightboxImages[lightboxIndex]; if(!w) return;
+                const hasDesc=w.description&&w.description.trim();
+                lightboxEl.innerHTML=`
+                    <div class="lightbox-overlay" id="lightboxOverlay">
+                        <button class="lightbox-close" id="lightboxClose">x</button>
+                        ${lightboxImages.length>1?`<button class="lightbox-nav prev" id="lightboxPrev"><</button>`:''}
+                        ${lightboxImages.length>1?`<button class="lightbox-nav next" id="lightboxNext">></button>`:''}
+                        <div class="lightbox-body">
+                            <div class="lightbox-img-wrap"><img src="${w.data}" alt="${escapeHTML(w.name)}" id="lightboxImg" class="blur-up" onload="this.classList.add('loaded')"></div>
+                            <div class="lightbox-desc-panel" id="lightboxDescPanel">
+                                <div class="desc-label">作品名称</div>
+                                <div class="desc-editable${isAdmin?'':' not-editable'}" id="lightboxNameDisplay" ${isAdmin?`onclick="startEditLightboxName('${w.id}')" title="点击编辑名称"`:''}>${escapeHTML(w.name)}</div>
+                                <div class="desc-label" style="margin-top:6px;">描述</div>
+                                <div class="desc-editable${isAdmin?'':' not-editable'} desc-text${hasDesc?'':' placeholder'}" id="lightboxDescDisplay" ${isAdmin?`onclick="startEditLightboxDesc('${w.id}')" title="点击编辑描述"`:''}>${hasDesc?escapeHTML(w.description):'暂无描述，点击编辑'}</div>
+                            </div>
+                        </div>
+                        <div class="lightbox_counter" id="lightboxCounter">${lightboxIndex+1}/${lightboxImages.length} — ${escapeHTML(w.name)}</div>
+                    </div>`;
+                lightboxEl.style.display='block'; document.body.style.overflow='hidden';
+                document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+                document.getElementById('lightboxOverlay').addEventListener('click',(e)=>{ if(e.target===e.currentTarget) closeLightbox(); });
+                if(lightboxImages.length>1){
+                    document.getElementById('lightboxPrev').addEventListener('click',(e)=>{ e.stopPropagation(); navigateLightbox(-1); });
+                    document.getElementById('lightboxNext').addEventListener('click',(e)=>{ e.stopPropagation(); navigateLightbox(1); });
+                    // 触控滑动
+                    attachLightboxSwipe();
+                }
+                document.addEventListener('keydown', lightboxKeydown);
+            }
+            function navigateLightbox(direction) {
+                if(lightboxImages.length<=1) return;
+                const oldIdx = lightboxIndex;
+                lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+                if(oldIdx === lightboxIndex) return;
+                const img = document.getElementById('lightboxImg');
+                if(!img) { showLightbox(); return; }
+                const w = lightboxImages[lightboxIndex];
+                const outClass = direction > 0 ? 'slide-out-left' : 'slide-out-right';
+                const inClass = direction > 0 ? 'slide-in-right' : 'slide-in-left';
+                function doSwap() {
+                    img.classList.add(outClass);
+                    const onEnd = () => {
+                        img.removeEventListener('transitionend', onEnd);
+                        img.src = w.data; img.alt = escapeHTML(w.name);
+                        img.classList.remove(outClass);
+                        img.classList.add(inClass);
+                        const nameEl = document.getElementById('lightboxNameDisplay');
+                        const descEl = document.getElementById('lightboxDescDisplay');
+                        const counterEl = document.getElementById('lightboxCounter');
+                        if(nameEl) { nameEl.textContent = w.name; if(isAdmin) nameEl.setAttribute('onclick',`startEditLightboxName('${w.id}')`); }
+                        if(descEl) { const hasD=w.description&&w.description.trim(); descEl.textContent = hasD?w.description:'暂无描述，点击编辑'; descEl.className = 'desc-editable'+(isAdmin?'':' not-editable')+' desc-text'+(hasD?'':' placeholder'); if(isAdmin) descEl.setAttribute('onclick',`startEditLightboxDesc('${w.id}')`); }
+                        if(counterEl) counterEl.textContent = (lightboxIndex+1)+'/'+lightboxImages.length+' — '+w.name;
+                        setTimeout(() => img.classList.remove(inClass), 50);
+                    };
+                    img.addEventListener('transitionend', onEnd, { once: true });
+                    // 兜底：若 transitionend 未触发
+                    setTimeout(() => { if(img.classList.contains(outClass)) onEnd(); }, 400);
+                }
+                // 预加载下一张图片消除闪烁
+                const preload = new Image();
+                preload.onload = doSwap;
+                preload.onerror = doSwap;
+                preload.src = w.data;
+            }
+            function attachLightboxSwipe() {
+                const overlay = document.getElementById('lightboxOverlay');
+                if(!overlay) return;
+                let startX = 0, startY = 0;
+                overlay.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, {passive:true});
+                overlay.addEventListener('touchend', (e) => {
+                    const dx = e.changedTouches[0].clientX - startX;
+                    const dy = e.changedTouches[0].clientY - startY;
+                    if(Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return; // 最小滑动距离，排除纵向划动
+                    navigateLightbox(dx > 0 ? -1 : 1);
+                });
+            }
+            function closeLightbox() {
+                lightboxEl.style.display='none'; lightboxEl.innerHTML=''; document.body.style.overflow='';
+                document.removeEventListener('keydown', lightboxKeydown);
+                if (currentAlbumId) {
+                    setTimeout(() => openAlbum(currentAlbumId), 50);
+                }
+            }
+            function lightboxKeydown(e) {
+                if(e.key==='Escape') closeLightbox();
+                // 避免在 input/textarea 编辑时光标被左右箭头劫持
+                const active = document.activeElement;
+                const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+                if(!isInput && e.key==='ArrowLeft'&&lightboxImages.length>1) navigateLightbox(-1);
+                if(!isInput && e.key==='ArrowRight'&&lightboxImages.length>1) navigateLightbox(1);
+            }
+
+            // ---- 灯箱：编辑名称 ----
+            function startEditLightboxName(workId) {
+                if(!isAdmin) return;
+                const w=findWorkById(workId); if(!w) return;
+                const displayEl=document.getElementById('lightboxNameDisplay');
+                if(!displayEl) return;
+                displayEl.classList.add('editing');
+                const input=document.createElement('input');
+                input.className='desc-name-input'; input.value=w.name; input.id='lightboxNameInput';
+                displayEl.innerHTML=''; displayEl.appendChild(input);
+                input.focus(); input.select();
+                input.addEventListener('blur',()=>finishEditLightboxName(workId,input.value));
+                input.addEventListener('keydown',(e)=>{
+                    if(e.key==='Enter'){ e.preventDefault(); finishEditLightboxName(workId,input.value); }
+                    if(e.key==='Escape'){ e.preventDefault(); showLightbox(); }
+                });
+            }
+            function finishEditLightboxName(workId,newName) {
+                const w=findWorkById(workId); if(!w) return;
+                const val=newName.trim(); if(val) w.name=val;
+                saveToLocal(); showLightbox(); showToast('名称已保存');
+            }
+            window.startEditLightboxName=startEditLightboxName;
+
+            // ---- 灯箱：编辑描述 ----
+            function startEditLightboxDesc(workId) {
+                if(!isAdmin) return;
+                const w=findWorkById(workId); if(!w) return;
+                const displayEl=document.getElementById('lightboxDescDisplay');
+                if(!displayEl) return;
+                displayEl.classList.add('editing');
+                const ta=document.createElement('textarea');
+                ta.className='desc-textarea'; ta.value=w.description||''; ta.id='lightboxDescTextarea';
+                ta.placeholder='写一些关于这幅作品的介绍...';
+                autoResizeTextarea(ta);
+                ta.addEventListener('input',()=>autoResizeTextarea(ta));
+                displayEl.innerHTML=''; displayEl.appendChild(ta);
+                ta.focus();
+                ta.addEventListener('blur',()=>finishEditLightboxDesc(workId));
+                ta.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ e.preventDefault(); finishEditLightboxDesc(workId); } });
+            }
+            function finishEditLightboxDesc(workId) {
+                const w=findWorkById(workId); if(!w) return;
+                const ta=document.getElementById('lightboxDescTextarea');
+                if(ta) w.description=ta.value.trim();
+                saveToLocal(); showLightbox(); showToast('描述已保存');
+            }
+            window.startEditLightboxDesc=startEditLightboxDesc;
+
+            // ==================== 文档预览 ====================
+            function openDocument(docId) {
+                const w=appData.works.find(x=>x.id===docId); if(!w) return;
+                showDocPreview(w);
+            }
+            function showDocPreview(w) {
+                let bodyHtml='';
+                if(w.extension==='docx'){
+                    bodyHtml=`<div class="doc-body" id="docxLoading">正在解析 DOCX 文件...</div>`;
+                } else if(isTextPreviewable(w)){
+                    const content=decodeTextContent(w);
+                    bodyHtml=`<div class="doc-body">${escapeHTML(content)}</div>`;
+                } else {
+                    bodyHtml=`
+                        <div class="doc-file-info">
+                            <div class="big-icon">[${w.extension.toUpperCase()}]</div>
+                            <p><strong>${escapeHTML(w.name)}</strong></p>
+                            <p>类型: ${w.extension.toUpperCase()} / 大小: ${formatSize(w.size||0)} / ${formatDate(w.dateAdded)}</p>
+                            <p style="margin-top:12px;">该格式暂不支持在线预览，请下载后查看。</p>
+                            <button class="btn btn-accent btn-sm" style="margin-top:10px;" onclick="downloadWork('${w.id}')">下载文件</button>
+                        </div>`;
+                }
+                textPreviewBox.innerHTML=`
+                    <div class="doc-preview-overlay" id="docPreviewOverlay">
+                        <div class="doc-preview-card">
+                            <button class="doc-preview-close" id="docPreviewClose">x</button>
+                            <h2>${escapeHTML(w.name)}</h2>
+                            <div class="doc-meta">${formatDate(w.dateAdded)} / ${formatSize(w.size||0)} / ${w.extension.toUpperCase()}</div>
+                            ${bodyHtml}
+                        </div>
+                    </div>`;
+                textPreviewBox.style.display='block'; document.body.style.overflow='hidden';
+                document.getElementById('docPreviewClose').addEventListener('click', closeDocPreview);
+                document.getElementById('docPreviewOverlay').addEventListener('click',(e)=>{ if(e.target===e.currentTarget) closeDocPreview(); });
+                document.addEventListener('keydown', docPreviewKeydown);
+
+                if(w.extension==='docx') showDocxPreviewAsync(w);
+            }
+            function closeDocPreview() {
+                textPreviewBox.style.display='none'; textPreviewBox.innerHTML=''; document.body.style.overflow='';
+                document.removeEventListener('keydown', docPreviewKeydown);
+            }
+            function docPreviewKeydown(e) { if(e.key==='Escape') closeDocPreview(); }
+            function downloadWork(workId) {
+                const w=appData.works.find(x=>x.id===workId); if(!w) return;
+                const a=document.createElement('a'); a.href=w.data; a.download=w.name;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                showToast('下载中: '+w.name);
+            }
+            window.downloadWork=downloadWork;
+
+            // ==================== 新建文本作品 ====================
+            function showNewTextModal() {
+                newTextModal.innerHTML=`
+                    <div class="modal-form-overlay" id="newTextOverlay">
+                        <div class="modal-form-card">
+                            <h3>新建文本作品</h3>
+                            <label>作品标题</label>
+                            <input type="text" id="newTextTitle" placeholder="给你的作品起个名字...">
+                            <label>内容</label>
+                            <textarea id="newTextContent" placeholder="在这里写下你的文字..."></textarea>
+                            <div class="modal-form-actions">
+                                <button class="btn btn-ghost btn-sm" onclick="closeNewTextModal()">取消</button>
+                                <button class="btn btn-accent btn-sm" onclick="submitNewText()">创建</button>
+                            </div>
+                        </div>
+                    </div>`;
+                newTextModal.style.display='block';
+                document.getElementById('newTextOverlay').addEventListener('click',(e)=>{ if(e.target===e.currentTarget) closeNewTextModal(); });
+            }
+            function closeNewTextModal() { newTextModal.style.display='none'; newTextModal.innerHTML=''; }
+            function submitNewText() {
+                const title=document.getElementById('newTextTitle').value.trim();
+                const content=document.getElementById('newTextContent').value;
+                if(!title&&!content.trim()){ showToast('请至少输入标题或内容','warning'); return; }
+                createTextWork(title||'未命名', content); closeNewTextModal();
+            }
+            window.submitNewText=submitNewText;
+            window.closeNewTextModal=closeNewTextModal;
+
+            // ==================== 自动扩展文本框 ====================
+            function autoResizeTextarea(ta) {
+                ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px';
+            }
+            function getImageDimensions(src) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+                    img.onerror = () => resolve(null);
+                    img.src = src;
+                });
+            }
+
+            // ==================== 画册灯箱 L2 ====================
+            function openAlbum(albumId) {
+                const album = appData.works.find(w => w.id === albumId && w.type === 'album');
+                if (!album) return;
+                currentAlbumId = albumId;
+                albumLightboxImages = album.images || [];
+                renderAlbumLightbox(album);
+            }
+            function closeAlbum() {
+                document.getElementById('albumLightbox').style.display = 'none';
+                document.getElementById('albumLightbox').innerHTML = '';
+                document.body.style.overflow = '';
+                document.removeEventListener('keydown', albumKeydown);
+                currentAlbumId = null;
+                albumLightboxImages = [];
+            }
+            function albumKeydown(e) { if (e.key === 'Escape') closeAlbum(); }
+            function renderAlbumLightbox(album) {
+                const images = album.images || [];
+                const el = document.getElementById('albumLightbox');
+                // 为画册内图片构建瀑布流渲染
+                let masonryHtml = '';
+                if (images.length === 0) {
+                    masonryHtml = `<div class="album-empty">画册中还没有图片</div>`;
+                } else {
+                    masonryHtml = renderMasonryForAlbum(images);
+                }
+                el.innerHTML = `
+                    <div class="album-overlay" id="albumOverlay">
+                        <div class="album-header">
+                            <button class="btn btn-ghost btn-sm" id="albumBackBtn">返回书架</button>
+                            <h2>${escapeHTML(album.name)}</h2>
+                            ${isAdmin ? `
+                                <button class="btn btn-accent btn-sm" id="albumUploadBtn">上传图片</button>
+                                <button class="btn btn-ghost btn-sm" id="albumRenameBtn">重命名</button>
+                                <button class="btn btn-ghost btn-sm" id="albumDeleteBtn" style="color:var(--danger);">删除画册</button>
+                            ` : ''}
+                        </div>
+                        <div class="album-body">${masonryHtml}</div>
+                    </div>`;
+                el.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+
+                document.getElementById('albumBackBtn').addEventListener('click', closeAlbum);
+                document.getElementById('albumOverlay').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) closeAlbum();
+                });
+                document.addEventListener('keydown', albumKeydown);
+
+                // 绑定图片点击 → L3
+                el.querySelectorAll('[data-action="view-album-img"]').forEach((card, idx) => {
+                    card.addEventListener('click', (e) => {
+                        const actionEl = e.target.closest('[data-action]');
+                        if (actionEl && actionEl !== card) return;
+                        openLightboxInAlbum(album.id, idx);
+                    });
+                });
+
+                if (isAdmin && images.length > 0) {
+                    el.querySelectorAll('[data-action="set-cover"]').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            setAlbumCover(album.id, btn.dataset.imgId);
+                        });
+                    });
+                    el.querySelectorAll('[data-action="delete-album-img"]').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            deleteAlbumImage(album.id, btn.dataset.imgId);
+                        });
+                    });
+                    // 画册内图片拖拽排序
+                    attachDragSort();
+                    document.getElementById('albumUploadBtn').addEventListener('click', () => uploadToAlbum(album.id));
+                    document.getElementById('albumRenameBtn').addEventListener('click', () => renameAlbum(album.id));
+                    document.getElementById('albumDeleteBtn').addEventListener('click', () => {
+                        if (!confirm('确定删除整个画册及内部全部图片？不可恢复。')) return;
+                        appData.works = appData.works.filter(w => w.id !== album.id);
+                        saveToLocal(); closeAlbum(); renderPage(); showToast('画册已删除');
+                    });
+                }
+            }
+            function renderMasonryForAlbum(imgWorks) {
+                if (!imgWorks || imgWorks.length === 0) return '<div class="album-empty">画册中还没有图片</div>';
+                const columns = _buildMasonryColumns(imgWorks, { containerMaxWidth: 1100 });
+                let h = '<div class="masonry-container">';
+                for (const col of columns) {
+                    h += '<div class="masonry-column">';
+                    for (const w of col.works) {
+                        h += `
+                    <div class="masonry-card album-card-img" data-id="${w.id}" data-action="view-album-img" draggable="${isAdmin?'true':'false'}" data-drag-context="album" data-album-id="${currentAlbumId}" role="button" tabindex="0" aria-label="${escapeHTML(w.name)}">
+                        ${isAdmin ? `<span class="drag-handle album-img-drag-handle" data-action="drag-handle" title="拖动排序">::</span>` : ''}
+                        ${isAdmin ? `<div class="img-actions"><button data-action="set-cover" data-img-id="${w.id}">封面</button><button data-action="delete-album-img" data-img-id="${w.id}" class="danger">删除</button></div>` : ''}
+                        <img src="${w.data}" alt="${escapeHTML(w.name)}" class="blur-up" onload="this.classList.add('loaded')">
+                        <div class="card-info"><span class="card-name" title="${escapeHTML(w.name)}">${escapeHTML(w.name)}</span><span class="card-date">${formatDate(w.dateAdded)}</span></div>
+                    </div>`;
+                    }
+                    h += '</div>';
+                }
+                h += '</div>';
+                return h;
+            }
+            function openLightboxInAlbum(albumId, imgIdx) {
+                const album = appData.works.find(w => w.id === albumId);
+                if (!album || !album.images || imgIdx >= album.images.length) return;
+                lightboxImages = albumLightboxImages;
+                lightboxIndex = imgIdx;
+                showLightbox();
+            }
+
+            // ==================== 画册管理 ====================
+            function createAlbum() {
+                const name = prompt('请输入画册名称');
+                if (!name || !name.trim()) return;
+                appData.works.unshift({
+                    id: generateId(), type: 'album', name: name.trim(),
+                    extension: 'album', coverImage: null, dateAdded: Date.now(),
+                    description: '', size: 0, images: []
+                });
+                saveToLocal(); renderPage(); showToast('画册已创建');
+            }
+            function renameAlbum(albumId) {
+                const album = appData.works.find(w => w.id === albumId);
+                if (!album) return;
+                const newName = prompt('重命名画册', album.name);
+                if (!newName || !newName.trim()) return;
+                album.name = newName.trim();
+                saveToLocal(); renderAlbumLightbox(album);
+            }
+            async function addImagesToAlbum(albumId, files) {
+                const album = appData.works.find(w => w.id === albumId);
+                if (!album) return;
+                if (!album.images) album.images = [];
+                let added = 0;
+                const newImgs = []; // 批量收集避免循环内多次 unshift
+                for (const file of files) {
+                    const ext = getExtension(file.name);
+                    if (!IMAGE_EXTENSIONS.has(ext)) continue;
+                    try {
+                        const dataUrl = await readFileAsBase64(file);
+                        const img = {
+                            id: generateId(), name: file.name, data: dataUrl,
+                            mimeType: file.type || 'image/' + ext, size: file.size,
+                            dateAdded: Date.now(), extension: ext, description: '',
+                        };
+                        try {
+                            const dims = await getImageDimensions(dataUrl);
+                            if (dims) { img.imgWidth = dims.w; img.imgHeight = dims.h; }
+                        } catch(e) {}
+                        newImgs.push(img);
+                        added++;
+                        if (!album.coverImage) album.coverImage = dataUrl;
+                    } catch(err) { /* 文件处理失败 */ }
+                }
+                // 一次性倒序插入
+                album.images.unshift(...newImgs.reverse());
+                if (added > 0) {
+                    albumLightboxImages = album.images;
+                    saveToLocal();
+                    renderAlbumLightbox(album);
+                    showToast('已添加 ' + added + ' 张图片');
+                }
+            }
+            function uploadToAlbum(albumId) {
+                const input = document.createElement('input');
+                input.type = 'file'; input.multiple = true; input.accept = 'image/*';
+                input.onchange = () => {
+                    if (input.files.length > 0) addImagesToAlbum(albumId, Array.from(input.files));
+                };
+                input.click();
+            }
+            function moveImageToAlbum(imgId, albumId) {
+                const imgIdx = appData.works.findIndex(w => w.id === imgId && w.type === 'image');
+                if (imgIdx < 0) return;
+                const album = appData.works.find(w => w.id === albumId && w.type === 'album');
+                if (!album) return;
+                if (!album.images) album.images = [];
+                const [imgWork] = appData.works.splice(imgIdx, 1);
+                album.images.unshift(imgWork);
+                if (!album.coverImage) album.coverImage = imgWork.data;
+                saveToLocal(); renderPage(); showToast('已移至"' + album.name + '"');
+            }
+            function setAlbumCover(albumId, imgId) {
+                const album = appData.works.find(w => w.id === albumId);
+                if (!album || !album.images) return;
+                const img = album.images.find(x => x.id === imgId);
+                if (!img) return;
+                album.coverImage = img.data;
+                albumLightboxImages = album.images;
+                saveToLocal();
+                renderAlbumLightbox(album);
+                showToast('封面已设置');
+            }
+            function deleteAlbumImage(albumId, imgId) {
+                const album = appData.works.find(w => w.id === albumId);
+                if (!album || !album.images) return;
+                if (!confirm('确定从画册中删除此图片？')) return;
+                const img = album.images.find(x => x.id === imgId);
+                album.images = album.images.filter(x => x.id !== imgId);
+                if (img && album.coverImage === img.data) {
+                    album.coverImage = album.images.length > 0 ? album.images[0].data : null;
+                }
+                albumLightboxImages = album.images;
+                saveToLocal();
+                renderAlbumLightbox(album);
+                showToast('已删除');
+            }
+            function showAlbumPicker(imgId) {
+                const albums = appData.works.filter(w => w.type === 'album');
+                if (albums.length === 0) {
+                    showToast('请先创建一个画册', 'warning');
+                    return;
+                }
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-form-overlay';
+                overlay.innerHTML = `
+                    <div class="modal-form-card">
+                        <h3>移至画册</h3>
+                        <div class="album-picker-list">
+                            ${albums.map(a => `<button class="album-picker-item" data-album-id="${a.id}">${escapeHTML(a.name)} ${a.images?'('+a.images.length+'张)':''}</button>`).join('')}
+                        </div>
+                        <div class="modal-form-actions">
+                            <button class="btn btn-ghost btn-sm" id="albumPickerCancel">取消</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+                document.getElementById('albumPickerCancel').addEventListener('click', () => overlay.remove());
+                overlay.querySelectorAll('.album-picker-item').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        moveImageToAlbum(imgId, btn.dataset.albumId);
+                        overlay.remove();
+                    });
+                });
+            }
+            window.createAlbum = createAlbum;
+
+            // ==================== 关于我编辑 ====================
+            function editSectionTitle(sectionId) {
+                const sec=appData.profile.sections.find(s=>s.id===sectionId); if(!sec) return;
+                const titleEl=document.querySelector(`.profile-card-title[data-id="${sectionId}"]`);
+                if(!titleEl) return;
+                const input=document.createElement('input');
+                input.value=sec.title; input.id='editTitleInput_'+sectionId;
+                titleEl.innerHTML=''; titleEl.appendChild(input);
+                input.focus(); input.select();
+                input.addEventListener('blur',()=>finishEditTitle(sectionId,input.value));
+                input.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); finishEditTitle(sectionId,input.value); } });
+            }
+            function finishEditTitle(sectionId,newTitle) {
+                const sec=appData.profile.sections.find(s=>s.id===sectionId); if(!sec) return;
+                const val=newTitle.trim(); if(val) sec.title=val;
+                saveToLocal(); renderPage();
+            }
+            function editSectionContent(sectionId) {
+                const sec=appData.profile.sections.find(s=>s.id===sectionId); if(!sec) return;
+                const contentEl=document.querySelector(`.card-content[data-id="${sectionId}"]`);
+                if(!contentEl) return;
+                const wrap=contentEl.parentElement;
+                const ta=document.createElement('textarea');
+                ta.className='card-content-textarea'; ta.value=sec.content; ta.id='editContentTextarea_'+sectionId;
+                autoResizeTextarea(ta);
+                ta.addEventListener('input',()=>autoResizeTextarea(ta));
+                contentEl.style.display='none'; wrap.appendChild(ta);
+                ta.focus();
+                ta.addEventListener('blur',()=>finishEditContent(sectionId,ta));
+                ta.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ e.preventDefault(); finishEditContent(sectionId,ta); } });
+            }
+            function finishEditContent(sectionId,ta) {
+                const sec=appData.profile.sections.find(s=>s.id===sectionId); if(!sec) return;
+                if(ta&&ta.value!==undefined) sec.content=ta.value;
+                saveToLocal(); renderPage();
+            }
+            function editProfileHeader() {
+                const name=prompt('姓名/大标题',appData.profile.name);
+                if(name!==null) appData.profile.name=name;
+                const subtitle=prompt('副标题/简介',appData.profile.subtitle);
+                if(subtitle!==null) appData.profile.subtitle=subtitle;
+                saveToLocal(); renderPage();
+            }
+            function addProfileSection() {
+                const id='sec_'+Date.now(); const title=prompt('新栏目标题','新栏目');
+                if(!title) return;
+                appData.profile.sections.push({ id, icon:'*', title, content:'在此输入内容' });
+                saveToLocal(); renderPage();
+            }
+            window.editProfileHeader=editProfileHeader;
+            window.addProfileSection=addProfileSection;
+
+            // ==================== 管理 ====================
+            function toggleAdmin() {
+                if(isAdmin){ isAdmin=false; document.body.classList.remove('admin-mode'); renderPage(); return; }
+                const pwd=prompt('输入管理密码');
+                if(pwd==='admin'){ isAdmin=true; document.body.classList.add('admin-mode'); renderPage(); showToast('管理模式已开启'); }
+                else if(pwd!==null){ showToast('密码错误','error'); }
+            }
+
+            // ==================== 页面切换 ====================
+            document.getElementById('navTabs').addEventListener('click',(e)=>{
+                const tab=e.target.closest('.nav-tab'); if(!tab) return;
+                currentPage=tab.dataset.page; renderPage();
+            });
+            adminToggle.addEventListener('click', toggleAdmin);
+
+            fileInput.addEventListener('change',()=>{ if(fileInput.files.length>0){ addFiles(fileInput.files); fileInput.value=''; } });
+
+            // 全局拖拽上传
+            let dragCounter=0;
+            document.addEventListener('dragenter',(e)=>{ e.preventDefault(); dragCounter++; if(dragCounter===1) dropHighlight.style.display='flex'; });
+            document.addEventListener('dragleave',(e)=>{ e.preventDefault(); dragCounter--; if(dragCounter<=0){ dragCounter=0; dropHighlight.style.display='none'; } });
+            document.addEventListener('dragover',(e)=>{ e.preventDefault(); });
+            document.addEventListener('drop',(e)=>{ e.preventDefault(); dragCounter=0; dropHighlight.style.display='none'; if(e.dataTransfer.files.length>0) addFiles(e.dataTransfer.files); });
+
+            // 粘贴上传
+            document.addEventListener('paste',(e)=>{
+                const items=e.clipboardData?.items; if(!items) return;
+                const files=[]; for(const item of items){ if(item.kind==='file'){ const f=item.getAsFile(); if(f) files.push(f); } }
+                if(files.length>0){ e.preventDefault(); addFiles(files); }
+            });
+
+            // 全局键盘无障碍：Enter/Space 激活可交互卡片
+            document.addEventListener('keydown',(e)=>{
+                if(e.key!=='Enter'&&e.key!==' ') return;
+                const card = e.target.closest('[role="button"][data-action]');
+                if(!card || card.tagName==='BUTTON'||card.tagName==='A'||card.tagName==='INPUT') return;
+                if(e.target.closest('button')||e.target.closest('input')||e.target.closest('textarea')) return;
+                e.preventDefault();
+                card.click();
+            });
+
+            // ==================== 初始化 ====================
+            async function init() {
+                const fromJSON=await loadFromJSON(); if(!fromJSON) loadFromLocal();
+                if(!appData.works||!appData.profile){ appData={ works:[], profile:JSON.parse(JSON.stringify(DEFAULT_PROFILE)) }; }
+                if(!_localStorageAvailable) showToast('浏览器存储不可用，数据不会持久保存','warning');
+
+                // 若无作品则添加测试数据
+                if (appData.works.length === 0) {
+                    const testImgs = [
+                        { seed:'a', w:400, h:600, name:'城市天际线' },
+                        { seed:'b', w:400, h:300, name:'山间小屋' },
+                        { seed:'c', w:400, h:400, name:'几何图案' },
+                        { seed:'d', w:400, h:500, name:'秋日森林' },
+                        { seed:'e', w:400, h:250, name:'海岸日落' },
+                        { seed:'f', w:400, h:350, name:'老街巷子' },
+                        { seed:'g', w:400, h:700, name:'摩天轮夜景' },
+                        { seed:'h', w:400, h:280, name:'咖啡与书' },
+                    ];
+                    for (const t of testImgs) {
+                        appData.works.push({
+                            id:'test_'+t.seed, type:'image',
+                            name:t.name,
+                            data:'https://picsum.photos/seed/'+t.seed+'/'+t.w+'/'+t.h,
+                            imgWidth:t.w, imgHeight:t.h,
+                            size:0, dateAdded:Date.now(), extension:'jpg', description:'',
+                        });
+                    }
+                    // 添加一个测试画册
+                    appData.works.push({
+                        id: 'test_album_1', type: 'album', name: '旅行纪念册',
+                        extension: 'album', coverImage: 'https://picsum.photos/seed/travel/400/500',
+                        dateAdded: Date.now(), description: '', size: 0,
+                        images: [
+                            { id:'test_ai_1', name:'机场日出', data:'https://picsum.photos/seed/apt1/400/300', imgWidth:400, imgHeight:300, size:0, dateAdded:Date.now(), extension:'jpg', description:'清晨的机场候机大厅' },
+                            { id:'test_ai_2', name:'古城小巷', data:'https://picsum.photos/seed/oldtown/400/600', imgWidth:400, imgHeight:600, size:0, dateAdded:Date.now(), extension:'jpg', description:'石板路与红灯笼' },
+                            { id:'test_ai_3', name:'海景餐厅', data:'https://picsum.photos/seed/seaside/400/350', imgWidth:400, imgHeight:350, size:0, dateAdded:Date.now(), extension:'jpg', description:'' },
+                        ]
+                    });
+                }
+
+                renderPage();
+            }
+            init();
+
+            // 响应式：窗口大小变化时重新布局瀑布流
+            // 将 onclick 所需函数暴露到全局作用域
+            window.exportFullData = exportFullData;
+            window.createAlbum = createAlbum;
+            window.editProfileHeader = editProfileHeader;
+            window.addProfileSection = addProfileSection;
+
+            let _resizeTimer = null;
+            window.addEventListener('resize', () => {
+                if (currentPage !== 'images') return;
+                clearTimeout(_resizeTimer);
+                _resizeTimer = setTimeout(() => renderPage(), 250);
+            });
+        })();
+    </script>
+</body>
+</html>
