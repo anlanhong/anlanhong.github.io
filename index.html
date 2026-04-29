@@ -380,7 +380,7 @@
             .lightbox-body.landscape-layout .lightbox-img-wrap { max-width:100% !important; }
             .lightbox-body .lightbox-img-wrap img { max-height:52vh; }
             .lightbox-info-panel { flex:0 0 auto; width:100%; max-width:100%; max-height:32vh; }
-            .lightbox-nav.prev { left:6px; } .lightbox-nav.next { right:6px; }
+            .lightbox-nav { display:none; }
         }
 
         /* ========== 文档预览模态框 ========== */
@@ -657,9 +657,9 @@
             <button class="nav-tab" data-page="documents">文案</button>
         </div>
         <div class="nav-actions">
-            <button class="btn btn-accent btn-sm" onclick="document.getElementById('fileInput').click()" title="上传文件">上传</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportFullData()" title="导出 data.json">导出</button>
-            <button class="btn btn-accent btn-sm" id="btnNewAlbum" style="display:none;" onclick="createAlbum()">+ 画册</button>
+            <button class="btn btn-accent btn-sm admin-only" onclick="document.getElementById('fileInput').click()" title="上传文件">上传</button>
+            <button class="btn btn-ghost btn-sm admin-only" onclick="exportFullData()" title="导出 data.json">导出</button>
+            <button class="btn btn-accent btn-sm admin-only" id="btnNewAlbum" style="display:none;" onclick="createAlbum()">+ 画册</button>
             <button class="btn btn-ghost btn-icon btn-sm" id="adminToggle" title="管理">管</button>
         </div>
     </nav>
@@ -724,6 +724,11 @@
             let appData = { works:[], profile:JSON.parse(JSON.stringify(DEFAULT_PROFILE)) };
             let currentPage = 'profile';
             let isAdmin = false;
+            const isLocalEnv = (() => {
+                const p = window.location.protocol;
+                const h = window.location.hostname;
+                return p === 'file:' || h === 'localhost' || h === '127.0.0.1' || h === '';
+            })();
             let lightboxImages = [];
             let lightboxIndex = 0;
             let dragData = null; // 拖拽排序临时数据
@@ -971,8 +976,16 @@
             }
             function updateAdminUI() {
                 adminToggle.innerHTML = isAdmin ? '退出管理' : '管理';
-                const albumBtn = document.getElementById('btnNewAlbum');
-                if (albumBtn) albumBtn.style.display = (isAdmin && currentPage==='images') ? '' : 'none';
+                // 管理按钮始终可见（部署后也允许通过密码进入管理模式）
+                // 上传/导出/画册按钮 + 统计栏 仅在本地编辑 或 已进入管理模式时显示
+                const showAdmin = isLocalEnv || isAdmin;
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    if (el.id === 'btnNewAlbum') {
+                        el.style.display = (showAdmin && currentPage === 'images') ? '' : 'none';
+                    } else {
+                        el.style.display = showAdmin ? '' : 'none';
+                    }
+                });
             }
             function renderImagesPage() {
                 const allImgs = appData.works.filter(w=>w.type==='image');
@@ -981,7 +994,9 @@
                 const totalSize = allImgs.reduce((s,w)=>s+(w.size||0),0);
                 const usageMB = getStorageUsageMB();
                 let html = '';
-                html+=`<div class="stats-bar"><span class="stat">图片 <strong>${allImgs.length}</strong></span><span class="stats-sep"></span><span class="stat">画册 <strong>${allAlbums.length}</strong></span><span class="stats-sep"></span><span class="stat">大小 <strong>${formatSize(totalSize)}</strong></span><span class="stats-sep"></span><span class="stat" style="color:${usageMB>4?'var(--danger)':''}">存储 <strong>${usageMB.toFixed(1)}</strong>/5MB</span></div>`;
+                if (isLocalEnv || isAdmin) {
+                    html+=`<div class="stats-bar"><span class="stat">图片 <strong>${allImgs.length}</strong></span><span class="stats-sep"></span><span class="stat">画册 <strong>${allAlbums.length}</strong></span><span class="stats-sep"></span><span class="stat">大小 <strong>${formatSize(totalSize)}</strong></span><span class="stats-sep"></span><span class="stat" style="color:${usageMB>4?'var(--danger)':''}">存储 <strong>${usageMB.toFixed(1)}</strong>/5MB</span></div>`;
+                }
                 if(allMedia.length===0) {
                     html+=renderEmptyState('美术');
                 } else {
@@ -994,7 +1009,9 @@
                 const totalSize = allDocs.reduce((s,w)=>s+(w.size||0),0);
                 const usageMB = getStorageUsageMB();
                 let html = '';
-                html+=`<div class="stats-bar"><span class="stat">文档 <strong>${allDocs.length}</strong></span><span class="stats-sep"></span><span class="stat">大小 <strong>${formatSize(totalSize)}</strong></span><span class="stats-sep"></span><span class="stat" style="color:${usageMB>4?'var(--danger)':''}">存储 <strong>${usageMB.toFixed(1)}</strong>/5MB</span></div>`;
+                if (isLocalEnv || isAdmin) {
+                    html+=`<div class="stats-bar"><span class="stat">文档 <strong>${allDocs.length}</strong></span><span class="stats-sep"></span><span class="stat">大小 <strong>${formatSize(totalSize)}</strong></span><span class="stats-sep"></span><span class="stat" style="color:${usageMB>4?'var(--danger)':''}">存储 <strong>${usageMB.toFixed(1)}</strong>/5MB</span></div>`;
+                }
                 if(allDocs.length===0) {
                     html+=renderEmptyState('文案');
                 } else {
@@ -1281,7 +1298,6 @@
                 lightboxEl.innerHTML=`
                     <div class="lightbox-overlay" id="lightboxOverlay">
                         <button class="lightbox-back" id="lightboxBack" title="返回">←</button>
-                        <button class="lightbox-close" id="lightboxClose">✕</button>
                         ${lightboxImages.length>1?`<button class="lightbox-nav prev" id="lightboxPrev">‹</button>`:''}
                         ${lightboxImages.length>1?`<button class="lightbox-nav next" id="lightboxNext">›</button>`:''}
                         <div class="lightbox-body ${layoutClass}">
@@ -1338,15 +1354,14 @@
                 }
 
                 // 事件绑定
-                document.getElementById('lightboxClose').addEventListener('click', () => closeLightbox(true));
                 document.getElementById('lightboxBack').addEventListener('click', () => closeLightbox(true));
                 overlay.addEventListener('click', (e) => { if(e.target === overlay) closeLightbox(true); });
                 if(lightboxImages.length>1){
                     document.getElementById('lightboxPrev').addEventListener('click',(e)=>{ e.stopPropagation(); navigateLightbox(-1); });
                     document.getElementById('lightboxNext').addEventListener('click',(e)=>{ e.stopPropagation(); navigateLightbox(1); });
                 }
-                // 下拉关闭手势
-                attachPullDownGesture(overlay, imgEl);
+                // 触控手势（左右滑动切换 / 下拉关闭）
+                attachSwipeGestures(overlay, imgEl);
                 document.addEventListener('keydown', lightboxKeydown);
             }
             function navigateLightbox(direction) {
@@ -1432,7 +1447,7 @@
                     if (overlay) overlay.style.opacity = '0';
 
                     // 隐藏 UI 元素
-                    document.querySelectorAll('.lightbox-back,.lightbox-close,.lightbox-nav,.lightbox-counter,.lightbox-info-panel,.lightbox-pull-hint').forEach(el => { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; });
+                    document.querySelectorAll('.lightbox-back,.lightbox-nav,.lightbox-counter,.lightbox-info-panel,.lightbox-pull-hint').forEach(el => { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; });
 
                     imgEl.style.transition = 'transform 0.35s cubic-bezier(0.4,0,0.2,1)';
                     imgEl.style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
@@ -1451,28 +1466,41 @@
                 if(!isInput && e.key==='ArrowLeft'&&lightboxImages.length>1) navigateLightbox(-1);
                 if(!isInput && e.key==='ArrowRight'&&lightboxImages.length>1) navigateLightbox(1);
             }
-            // 下拉关闭手势（移动端）
-            function attachPullDownGesture(overlay, imgEl) {
+            // 统一触控手势：左右滑动切换图片 / 下拉关闭灯箱
+            function attachSwipeGestures(overlay, imgEl) {
                 if (!overlay || !imgEl) return;
-                let startY = 0, startX = 0, moved = false, animating = false;
+                let startY = 0, startX = 0, moved = false, animating = false, direction = null;
                 const hint = document.getElementById('lightboxPullHint');
-                const threshold = 80;
+                const closeThreshold = 80;
+                const swipeThreshold = 50;
 
                 const onTouchStart = (e) => {
                     if (e.touches.length !== 1 || animating) return;
                     startY = e.touches[0].clientY;
                     startX = e.touches[0].clientX;
+                    direction = null;
                     moved = false;
                 };
                 const onTouchMove = (e) => {
                     if (e.touches.length !== 1 || animating) return;
-                    const dy = e.touches[0].clientY - startY;
                     const dx = e.touches[0].clientX - startX;
-                    // 仅响应向下且以纵向为主的拖拽
-                    if (dy > 20 && Math.abs(dy) > Math.abs(dx) * 1.5) {
-                        moved = true;
-                        const progress = Math.min(dy / threshold, 1);
-                        imgEl.style.transition = 'none';
+                    const dy = e.touches[0].clientY - startY;
+
+                    // 略过微小的误触
+                    if (!moved && Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+
+                    if (!direction) {
+                        direction = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+                    }
+
+                    moved = true;
+                    imgEl.style.transition = 'none';
+
+                    if (direction === 'horizontal' && lightboxImages.length > 1) {
+                        imgEl.style.transform = `translateX(${dx * 0.5}px)`;
+                        imgEl.style.opacity = Math.max(0.35, 1 - Math.abs(dx) / 280);
+                    } else if (direction === 'vertical' && dy > 10) {
+                        const progress = Math.min(dy / closeThreshold, 1);
                         imgEl.style.transform = `translateY(${dy * 0.5}px) scale(${1 - progress * 0.12})`;
                         imgEl.style.opacity = 1 - progress * 0.35;
                         if (hint && progress > 0.35) hint.classList.add('visible');
@@ -1480,16 +1508,28 @@
                 };
                 const onTouchEnd = (e) => {
                     if (!moved) return;
+                    const dx = e.changedTouches[0].clientX - startX;
                     const dy = e.changedTouches[0].clientY - startY;
-                    if (dy > threshold) {
+
+                    if (direction === 'horizontal' && lightboxImages.length > 1 && Math.abs(dx) > swipeThreshold) {
+                        // 滑动切换
+                        animating = true;
+                        imgEl.style.transition = 'all 0.22s cubic-bezier(0.4,0,0.2,1)';
+                        imgEl.style.transform = `translateX(${dx > 0 ? window.innerWidth : -window.innerWidth}px)`;
+                        imgEl.style.opacity = '0';
+                        setTimeout(() => {
+                            navigateLightbox(dx > 0 ? -1 : 1);
+                            animating = false;
+                        }, 240);
+                    } else if (direction === 'vertical' && dy > closeThreshold) {
+                        // 下拉关闭
                         animating = true;
                         if (hint) hint.classList.remove('visible');
-                        // 继续飞出后关闭
                         imgEl.style.transition = 'all 0.25s cubic-bezier(0.4,0,0.2,1)';
                         imgEl.style.transform = `translateY(${window.innerHeight}px) scale(0.7)`;
                         imgEl.style.opacity = '0';
-                        const overlay = document.getElementById('lightboxOverlay');
-                        if (overlay) overlay.style.opacity = '0';
+                        const overlayEl = document.getElementById('lightboxOverlay');
+                        if (overlayEl) overlayEl.style.opacity = '0';
                         setTimeout(() => closeLightbox(false), 260);
                     } else {
                         // 回弹
